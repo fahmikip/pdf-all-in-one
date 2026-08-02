@@ -5,6 +5,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
 from ui.widgets.drop_zone import DropZone
+from core.utils.history import HistoryStore
 
 
 class HomePage(QScrollArea):
@@ -49,15 +50,25 @@ class HomePage(QScrollArea):
         self.drop_zone = DropZone()
         layout.addWidget(self.drop_zone)
         stats = QGridLayout()
+        self.stat_values = []
         for index, (value, label) in enumerate((("0", "Total PDF Processed"), ("0 MB", "Storage Saved"), ("—", "Recent Files"))):
             card = QFrame()
             card.setObjectName("card")
             card_layout = QVBoxLayout(card)
             number = QLabel(value)
             number.setObjectName("section")
+            self.stat_values.append(number)
             card_layout.addWidget(number)
             caption = QLabel(label)
             caption.setObjectName("muted")
             card_layout.addWidget(caption)
             stats.addWidget(card, 0, index)
         layout.addLayout(stats)
+        self.refresh_stats()
+
+    def showEvent(self, event) -> None:
+        self.refresh_stats(); super().showEvent(event)
+
+    def refresh_stats(self) -> None:
+        count, saved = HistoryStore().stats(); entries = HistoryStore().load()
+        self.stat_values[0].setText(str(count)); self.stat_values[1].setText(f"{saved / 1048576:.2f} MB"); self.stat_values[2].setText(entries[0].filename if entries else "—")

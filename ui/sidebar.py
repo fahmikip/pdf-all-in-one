@@ -29,6 +29,7 @@ class Sidebar(QFrame):
             "CONVERT": [("convert", "⇄  Convert Files")],
             "EDIT": [("edit", "✎  Watermark & More")],
             "SECURITY": [("security", "◆  Protect / Unlock")],
+            "OCR": [("ocr", "⌕  OCR PDF / Image")],
             "MORE": [("history", "◷  History"), ("settings", "⚙  Settings"), ("about", "●  About Developer")],
         }
         for heading, entries in groups.items():

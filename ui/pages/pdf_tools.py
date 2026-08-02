@@ -16,6 +16,7 @@ from core.pdf.compressor import CompressionResult, compress_pdf
 from core.pdf.merger import merge_pdfs
 from core.pdf.splitter import extract_range, split_every_n
 from core.utils.validation import validate_pdf
+from core.utils.history import HistoryStore
 from ui.widgets.drop_zone import DropZone
 
 
@@ -124,6 +125,11 @@ class CompressPage(ToolPage):
                 aggressive=self.aggressive.isChecked(), with_progress=True,
             )
 
+    def _success(self, result: object) -> None:
+        super()._success(result)
+        if isinstance(result, CompressionResult) and self.source:
+            HistoryStore().add(self.source.name, "Compress PDF", result.original_size, result.compressed_size, str(result.output))
+
 
 class MergePage(ToolPage):
     def __init__(self) -> None:
@@ -154,6 +160,12 @@ class MergePage(ToolPage):
         if len(sources) < 2: QMessageBox.information(self, "Add PDFs", "Add at least two PDF files."); return
         output, _ = QFileDialog.getSaveFileName(self, "Save merged PDF", str(Path(sources[0]).with_name("merged.pdf")), "PDF files (*.pdf)")
         if output: self.run_job(merge_pdfs, sources, output, with_progress=True)
+
+    def _success(self, result: object) -> None:
+        super()._success(result)
+        if isinstance(result, Path):
+            sources = [Path(self.files.item(i).data(Qt.ItemDataRole.UserRole)) for i in range(self.files.count())]
+            HistoryStore().add(f"{len(sources)} files", "Merge PDF", sum(path.stat().st_size for path in sources if path.exists()), result.stat().st_size, str(result))
 
 
 class SplitPage(ToolPage):
@@ -188,3 +200,9 @@ class SplitPage(ToolPage):
         else:
             folder = QFileDialog.getExistingDirectory(self, "Choose output folder", str(self.source.parent))
             if folder: self.run_job(split_every_n, self.source, folder, 1 if mode == "Every page" else self.count.value())
+
+    def _success(self, result: object) -> None:
+        super()._success(result)
+        if self.source:
+            outputs = list(result) if isinstance(result, list) else [Path(result)]
+            HistoryStore().add(self.source.name, "Split / Extract PDF", self.source.stat().st_size, sum(Path(path).stat().st_size for path in outputs), str(Path(outputs[0]).parent if len(outputs) > 1 else outputs[0]))

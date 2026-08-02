@@ -13,6 +13,9 @@ from ui.pages.organizer import OrganizerPage
 from ui.pages.converter import ConverterPage
 from ui.pages.edit import EditPage
 from ui.pages.security import SecurityPage
+from ui.pages.history import HistoryPage
+from ui.pages.settings import SettingsPage
+from ui.pages.ocr import OcrPage
 from ui.pages.placeholder import PlaceholderPage
 from ui.sidebar import Sidebar
 
@@ -31,8 +34,10 @@ class MainWindow(QMainWindow):
         self.pages: dict[str, QWidget] = {
             "home": HomePage(), "about": AboutPage(), "compress": CompressPage(),
             "merge": MergePage(), "split": SplitPage(), "organize": OrganizerPage(), "convert": ConverterPage(), "edit": EditPage(), "security": SecurityPage(),
+            "history": HistoryPage(), "settings": SettingsPage(settings, config_store),
+            "ocr": OcrPage(),
         }
-        labels = {"ocr": "OCR PDF", "history": "History", "settings": "Settings"}
+        labels = {}
         for key, title in labels.items(): self.pages[key] = PlaceholderPage(title)
         for page in self.pages.values(): self.stack.addWidget(page)
         self.setCentralWidget(shell); self.setStatusBar(Footer())
