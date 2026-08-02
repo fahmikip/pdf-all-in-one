@@ -8,6 +8,8 @@ python -m pip install -r requirements.txt
 if errorlevel 1 exit /b 1
 python -m pytest
 if errorlevel 1 exit /b 1
+python installer\prepare_assets.py
+if errorlevel 1 exit /b 1
 if exist "build\PDFMaster" rmdir /s /q "build\PDFMaster"
 if exist "dist\PDF-Master" rmdir /s /q "dist\PDF-Master"
 pyinstaller --noconfirm PDFMaster.spec

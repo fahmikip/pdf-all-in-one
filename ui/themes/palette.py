@@ -13,8 +13,14 @@ def stylesheet_for(theme: str) -> str:
     dark = theme == "dark" or (theme == "system" and _system_is_dark())
     if dark:
         bg, surface, card, text, muted, border, hover = "#0B0F19", "#111827", "#182235", "#F8FAFC", "#94A3B8", "#263449", "#22304A"
+        quick = {"indigo": ("#171A3A", "#4F46E5"), "emerald": ("#0F2E2A", "#059669"), "amber": ("#332515", "#D97706"), "cyan": ("#102D36", "#0891B2"), "violet": ("#25183C", "#7C3AED"), "rose": ("#351725", "#E11D48")}
     else:
         bg, surface, card, text, muted, border, hover = "#F5F7FB", "#FFFFFF", "#FFFFFF", "#172033", "#64748B", "#E2E8F0", "#EEF2FF"
+        quick = {"indigo": ("#EEF2FF", "#A5B4FC"), "emerald": ("#ECFDF5", "#6EE7B7"), "amber": ("#FFFBEB", "#FCD34D"), "cyan": ("#ECFEFF", "#67E8F9"), "violet": ("#F5F3FF", "#C4B5FD"), "rose": ("#FFF1F2", "#FDA4AF")}
+    card_rules = "\n".join(
+        f'QFrame#quickCard[accent="{name}"], QFrame#statCard[accent="{name}"] {{ background: {colors[0]}; border: 1px solid {colors[1]}; }}'
+        for name, colors in quick.items()
+    )
     return f"""
     QWidget {{ color: {text}; font-family: 'Segoe UI'; font-size: 14px; }}
     QMainWindow, QStackedWidget {{ background: {bg}; }}
@@ -29,11 +35,19 @@ def stylesheet_for(theme: str) -> str:
     QPushButton#primary {{ background: #6366F1; color: white; text-align: center; font-weight: 600; padding: 11px 18px; }}
     QPushButton#primary:hover {{ background: #5558E8; }}
     QFrame#card {{ background: {card}; border: 1px solid {border}; border-radius: 14px; }}
+    QFrame#quickCard, QFrame#statCard {{ border-radius: 14px; }}
+    QFrame#quickCard:hover {{ border-width: 2px; }}
+    {card_rules}
     QFrame#dropZone {{ background: {card}; border: 2px dashed #A5B4FC; border-radius: 16px; }}
     QLabel#title {{ font-size: 28px; font-weight: 700; }}
     QLabel#section {{ font-size: 17px; font-weight: 650; }}
     QStatusBar {{ background: {surface}; border-top: 1px solid {border}; color: {muted}; }}
     QScrollArea {{ border: none; }}
+    QScrollArea#sidebarScroll, QScrollArea#sidebarScroll > QWidget > QWidget, QWidget#sidebarNavigation {{ background: {surface}; }}
+    QScrollBar:vertical {{ background: transparent; width: 7px; margin: 0; }}
+    QScrollBar::handle:vertical {{ background: {border}; border-radius: 3px; min-height: 28px; }}
+    QScrollBar::handle:vertical:hover {{ background: #A5B4FC; }}
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
     QScrollArea > QWidget > QWidget {{ background: {bg}; }}
     QComboBox, QLineEdit, QSpinBox {{ background: {card}; border: 1px solid {border}; border-radius: 7px; padding: 7px 10px; min-height: 20px; }}
     QComboBox:hover, QLineEdit:hover, QSpinBox:hover {{ border-color: #A5B4FC; }}

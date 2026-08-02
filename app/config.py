@@ -32,6 +32,8 @@ class Settings:
     language: str = "id"
     default_compression: str = "recommended"
     default_dpi: int = 150
+    check_updates: bool = True
+    skipped_version: str = ""
 
 
 class ConfigStore:

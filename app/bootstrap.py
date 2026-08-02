@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from app.config import APP_NAME, ConfigStore, Settings, VERSION
 from core.utils.logger import configure_logging
 from ui.main_window import MainWindow
+from ui.icons import icon
 from ui.themes.palette import stylesheet_for
 
 
@@ -33,6 +34,7 @@ def create_application(argv: list[str] | None = None) -> tuple[QApplication, Mai
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(VERSION)
     app.setOrganizationName("Fahmikip")
+    app.setWindowIcon(icon("app", 32))
     app.setStyle("Fusion")
     store = ConfigStore()
     settings = store.load()

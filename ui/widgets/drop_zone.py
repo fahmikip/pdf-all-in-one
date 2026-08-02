@@ -6,6 +6,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
+from ui.icons import icon as app_icon
 
 
 class DropZone(QFrame):
@@ -21,10 +22,10 @@ class DropZone(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(30, 28, 30, 28)
         layout.setSpacing(8)
-        icon = QLabel("⇩")
-        icon.setStyleSheet("font-size: 30px; color: #6366F1")
-        icon.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(icon)
+        icon_label = QLabel()
+        icon_label.setPixmap(app_icon("download", 30).pixmap(30, 30))
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(icon_label)
         title_label = QLabel(title)
         title_label.setObjectName("section")
         title_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
