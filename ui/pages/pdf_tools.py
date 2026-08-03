@@ -89,6 +89,7 @@ class CompressPage(ToolPage):
         self.drop.choose_requested.connect(self.choose); self.drop.files_dropped.connect(self.set_files)
         row = QHBoxLayout(); row.addWidget(QLabel("Compression level"))
         self.level = QComboBox(); self.level.addItems(["Low", "Recommended", "High", "Maximum"]); self.level.setCurrentText("Recommended"); row.addWidget(self.level, 1)
+        self.level.currentTextChanged.connect(self.level_changed)
         self.process = QPushButton("Compress PDF"); self.process.setObjectName("primary"); self.process.clicked.connect(self.start); row.addWidget(self.process)
         self.layout.insertLayout(3, row)
         self.aggressive = QCheckBox("Aggressive compression (smaller file, converts pages to images)")
@@ -96,6 +97,9 @@ class CompressPage(ToolPage):
         self.layout.insertWidget(4, self.aggressive)
         warning = QLabel("Aggressive mode lowers image quality and removes selectable/searchable text.")
         warning.setObjectName("muted"); self.layout.insertWidget(5, warning); self.layout.addStretch()
+
+    def level_changed(self, level: str) -> None:
+        if level == "Maximum": self.aggressive.setChecked(True)
 
     def choose(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")

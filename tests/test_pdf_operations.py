@@ -81,6 +81,16 @@ def test_aggressive_compression_produces_valid_smaller_pdf(tmp_path: Path) -> No
         assert document.page_count == 1
 
 
+def test_aggressive_compression_selects_smallest_valid_profile(tmp_path: Path) -> None:
+    source = tmp_path / "scan_profiles.pdf"; bitmap = tmp_path / "scan_profiles.jpg"
+    Image.effect_noise((1800, 2200), 85).convert("RGB").save(bitmap, quality=94)
+    with fitz.open() as document:
+        page = document.new_page(width=595, height=842); page.insert_image(page.rect, filename=str(bitmap)); document.save(source)
+    maximum = compress_pdf(source, tmp_path / "maximum.pdf", "maximum", aggressive=True)
+    low = compress_pdf(source, tmp_path / "low.pdf", "low", aggressive=True)
+    assert maximum.compressed_size < low.compressed_size < maximum.original_size
+
+
 def test_organize_pages_supports_duplicates_and_rotation(sample_pdf: Path, tmp_path: Path) -> None:
     output = organize_pages(sample_pdf, tmp_path / "organized.pdf", [PageSpec(2, 90), PageSpec(0), PageSpec(2, 180)])
     assert page_text(output) == ["Page 3", "Page 1", "Page 3"]

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 import shutil
+import tempfile
 
 import fitz
 from PIL import Image
@@ -89,17 +90,30 @@ def compress_pdf(
     with fitz.open(info.path) as document:
         if clean_metadata:
             document.set_metadata({})
-        target = _raster_compress(document, 110 if level == "maximum" else 130, 48 if level == "maximum" else 60, progress) if aggressive else document
-        try:
-            if not aggressive:
-                _recompress_images(target, level)
+        if aggressive:
+            profiles = {
+                "low": [(150, 72)], "recommended": [(135, 62), (120, 55)],
+                "high": [(120, 55), (105, 45), (96, 38)],
+                "maximum": [(110, 48), (96, 38), (82, 30)],
+            }[level]
+            with tempfile.TemporaryDirectory(prefix="pdfmaster-compress-") as work:
+                candidates: list[Path] = []
+                for profile_index, (dpi, quality) in enumerate(profiles, start=1):
+                    target = _raster_compress(document, dpi, quality, progress)
+                    candidate = Path(work) / f"profile-{profile_index}.pdf"
+                    try: target.save(candidate, garbage=4, deflate=True, deflate_images=True)
+                    finally: target.close()
+                    with fitz.open(candidate) as check:
+                        if check.page_count == info.pages: candidates.append(candidate)
+                    if progress: progress(min(95, round(profile_index / len(profiles) * 95)), f"Comparing compression profile {profile_index} of {len(profiles)}")
+                best = min(candidates, key=lambda path: path.stat().st_size) if candidates else info.path
+                with atomic_output(output) as temporary:
+                    shutil.copyfile(best if best.stat().st_size < info.size else info.path, temporary)
+        else:
+            _recompress_images(document, level)
             with atomic_output(output) as temporary:
-                target.save(temporary, garbage=garbage, deflate=True, deflate_images=True, deflate_fonts=True, clean=level in {"high", "maximum"})
-                if temporary.stat().st_size >= info.size:
-                    shutil.copyfile(info.path, temporary)
-        finally:
-            if target is not document:
-                target.close()
+                document.save(temporary, garbage=garbage, deflate=True, deflate_images=True, deflate_fonts=True, clean=level in {"high", "maximum"})
+                if temporary.stat().st_size >= info.size: shutil.copyfile(info.path, temporary)
     if progress:
         progress(100, output.name)
     return CompressionResult(output, info.size, output.stat().st_size)
