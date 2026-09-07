@@ -41,7 +41,21 @@ def test_pdf_to_excel_detects_tables(tmp_path: Path) -> None:
 
 def test_pdf_to_excel_no_tables_raises(sample_pdf: Path, tmp_path: Path) -> None:
     with pytest.raises(ValueError):
-        pdf_to_excel(sample_pdf, tmp_path / "out.xlsx")
+        pdf_to_excel(sample_pdf, tmp_path / "out.xlsx", text_fallback=False)
+
+
+def test_pdf_to_excel_borderless_text_columns(tmp_path: Path) -> None:
+    document = fitz.open()
+    page = document.new_page(width=400, height=300)
+    for word, x, y in (("Name", 40, 80), ("City", 200, 80), ("Pen", 40, 120), ("Bandung", 200, 120), ("Book", 40, 160), ("Surabaya", 200, 160)):
+        page.insert_text((x, y), word)
+    path = tmp_path / "columns.pdf"
+    document.save(path); document.close()
+
+    output = pdf_to_excel(path, tmp_path / "columns.xlsx")
+    workbook = load_workbook(output)
+    sheet = workbook.active
+    assert sheet["A1"].value == "Name" and sheet["B3"].value == "Surabaya"
 
 
 def test_pdf_to_excel_rejects_non_xlsx(sample_pdf: Path, tmp_path: Path) -> None:
