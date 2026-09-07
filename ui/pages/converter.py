@@ -75,7 +75,7 @@ class ConverterPage(QWidget):
         if office: self.status.setText(f"LibreOffice: {self.libreoffice or 'Not Found'}")
         elif to_pdf: self.status.setText("Add images to begin")
         elif mode == "PDF to Word": self.status.setText("Complex layouts may not convert perfectly. Text, paragraphs, and images are prioritized.")
-        elif mode == "PDF to Excel": self.status.setText("Tables are detected per page and exported to XLSX worksheets.")
+        elif mode == "PDF to Excel": self.status.setText("All text and images are laid out into Excel worksheets.")
         else: self.status.setText("Add one PDF to begin")
 
     def choose_libreoffice(self) -> None:

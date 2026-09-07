@@ -4,6 +4,7 @@ import fitz
 import pytest
 from docx import Document
 from openpyxl import load_workbook
+from PIL import Image
 
 from core.office.libreoffice_converter import LibreOfficeUnavailableError, find_libreoffice, office_to_pdf
 from core.office.pdf_to_excel import pdf_to_excel
@@ -17,45 +18,37 @@ def test_pdf_to_word_extracts_text(sample_pdf: Path, tmp_path: Path) -> None:
     assert "Page 1" in text and "Page 3" in text
 
 
-def _table_based_pdf(path: Path) -> Path:
+def _content_pdf(path: Path) -> Path:
     document = fitz.open()
-    page = document.new_page(width=400, height=300)
-    for x in (40, 160, 280, 360): page.draw_line(fitz.Point(x, 60), fitz.Point(x, 200), color=(0, 0, 0))
-    for y in (60, 100, 140, 180, 200): page.draw_line(fitz.Point(40, y), fitz.Point(360, y), color=(0, 0, 0))
-    for word, x, y in (("Item", 40, 80), ("Qty", 160, 80), ("Price", 280, 80), ("Pen", 40, 120), ("2", 160, 120), ("3.5", 280, 120), ("Book", 40, 160), ("1", 160, 160), ("12.0", 280, 160)):
-        page.insert_text((x + 6, y + 8), word)
+    page = document.new_page(width=300, height=400)
+    page.insert_text((40, 60), "Item")
+    page.insert_text((40, 120), "Pen")
+    image = Path(path.parent) / "photo.png"
+    Image.new("RGB", (80, 60), (200, 40, 40)).save(image)
+    page.insert_image(fitz.Rect(40, 160, 120, 220), filename=str(image))
     document.save(path)
     document.close()
     return path
 
 
-def test_pdf_to_excel_detects_tables(tmp_path: Path) -> None:
-    pdf = _table_based_pdf(tmp_path / "table.pdf")
-    output = pdf_to_excel(pdf, tmp_path / "table.xlsx")
+def test_pdf_to_excel_exports_text_and_images(tmp_path: Path) -> None:
+    pdf = _content_pdf(tmp_path / "content.pdf")
+    output = pdf_to_excel(pdf, tmp_path / "content.xlsx")
     workbook = load_workbook(output)
     assert workbook.sheetnames == ["Page 1"]
     sheet = workbook.active
-    assert sheet["A1"].value == "Item" and sheet["B1"].value == "Qty"
-    assert sheet["A2"].value == "Pen" and sheet["C3"].value == "12.0"
+    values = [sheet.cell(row=r, column=1).value for r in range(1, 4)]
+    assert "Item" in values and "Pen" in values
+    assert sheet._images, "expected an embedded image"
 
 
-def test_pdf_to_excel_no_tables_raises(sample_pdf: Path, tmp_path: Path) -> None:
-    with pytest.raises(ValueError):
-        pdf_to_excel(sample_pdf, tmp_path / "out.xlsx", text_fallback=False)
-
-
-def test_pdf_to_excel_borderless_text_columns(tmp_path: Path) -> None:
+def test_pdf_to_excel_empty_page_raises(sample_pdf: Path, tmp_path: Path) -> None:
+    blank = tmp_path / "blank.pdf"
     document = fitz.open()
-    page = document.new_page(width=400, height=300)
-    for word, x, y in (("Name", 40, 80), ("City", 200, 80), ("Pen", 40, 120), ("Bandung", 200, 120), ("Book", 40, 160), ("Surabaya", 200, 160)):
-        page.insert_text((x, y), word)
-    path = tmp_path / "columns.pdf"
-    document.save(path); document.close()
-
-    output = pdf_to_excel(path, tmp_path / "columns.xlsx")
-    workbook = load_workbook(output)
-    sheet = workbook.active
-    assert sheet["A1"].value == "Name" and sheet["B3"].value == "Surabaya"
+    document.new_page(width=300, height=400)
+    document.save(blank); document.close()
+    with pytest.raises(ValueError):
+        pdf_to_excel(blank, tmp_path / "out.xlsx")
 
 
 def test_pdf_to_excel_rejects_non_xlsx(sample_pdf: Path, tmp_path: Path) -> None:

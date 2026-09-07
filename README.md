@@ -1,40 +1,40 @@
 # PDF Master
 
-**PDF Master** is an offline-first, all-in-one PDF toolkit for Windows, built with Python 3.12 and PySide6. Every document operation runs on your own machine — nothing is uploaded, and no tracking or telemetry is included.
+**PDF Master** adalah perangkat PDF all-in-one untuk Windows yang berjalan sepenuhnya **offline**, dibangun dengan Python 3.12 dan PySide6. Semua operasi dokumen dijalankan di komputer Anda sendiri — tidak ada yang diunggah, dan tidak ada pelacakan atau telemetri.
 
-Current version: **v1.1.0**
+Versi saat ini: **v1.1.0**
 
 ---
 
-## Features
+## Fitur
 
-| Category | Tool | What it does |
+| Kategori | Alat | Fungsi |
 | --- | --- | --- |
-| PDF Tools | Compress PDF | Reduce file size with Low / Recommended / High / Maximum profiles; aggressive mode, produces no copy when already optimized |
-| PDF Tools | Merge PDF | Combine two or more PDFs, drag to reorder |
-| PDF Tools | Split PDF | Split every page, every N pages, or extract a specific range (e.g. `1-3, 5`) |
-| PDF Tools | Organize PDF | Reorder, rotate, and remove pages |
-| PDF Tools | Extract PDF | Export selectable text to `.txt` or embedded images to PNG / JPG / WEBP |
-| Convert | Convert Files | Image→PDF, PDF→JPG/PNG/WebP, Word/Excel/PowerPoint→PDF (LibreOffice), PDF→Word, PDF→Excel |
-| Edit | Watermark & More | Text/image watermarks, page numbers, headers & footers, metadata editing |
-| Security | Protect / Unlock | PDF password protection and authorized unlocking |
-| OCR | OCR PDF / Image | Make scanned documents searchable (requires Tesseract) |
-| Advanced | Batch Processing | Run the same operation on many files |
-| More | History | Local, document-content-free operation history with storage-saved stats |
-| More | Settings | Preferences, LibreOffice / Tesseract detection, update checks (notifications only, never auto-download) |
-| More | About Developer | Developer branding and version info |
+| Alat PDF | Kompres PDF | Perkecil ukuran file dengan profil Rendah / Disarankan / Tinggi / Maksimum; mode agresif untuk file yang sudah optimal |
+| Alat PDF | Gabung PDF | Gabungkan dua PDF atau lebih, atur urutan dengan drag |
+| Alat PDF | Pecah PDF | Pecah per halaman, setiap N halaman, atau rentang tertentu (mis. `1-3, 5`) |
+| Alat PDF | Susun PDF | Urut ulang, putar, dan hapus halaman |
+| Alat PDF | Ekstrak PDF | Ekspor teks ke `.txt` atau gambar tertanam ke PNG / JPG / WEBP |
+| Konversi | Konversi File | Gambar→PDF, PDF→JPG/PNG/WebP, Word/Excel/PowerPoint→PDF (LibreOffice), PDF→Word, PDF→Excel |
+| Edit | Watermark & Lainnya | Watermark teks/gambar, nomor halaman, header & footer, edit metadata |
+| Keamanan | Lindungi / Buka Kunci | Proteksi kata sandi PDF dan buka kunci resmi |
+| OCR | OCR PDF / Gambar | Buat hasil scan dapat dicari (memerlukan Tesseract) |
+| Lanjutan | Proses Batch | Jalankan operasi yang sama untuk banyak file sekaligus |
+| Lainnya | Riwayat | Riwayat operasi lokal tanpa isi dokumen, lengkap dengan statistik penyimpanan |
+| Lainnya | Pengaturan | Preferensi, deteksi LibreOffice / Tesseract, pemeriksaan pembaruan (hanya notifikasi, tidak pernah unduh otomatis) |
+| Lainnya | Tentang Developer | Informasi developer dan versi |
 
-All new edits are written to **new files** — your originals are never modified.
+Semua hasil edit ditulis ke file **baru** — file asli Anda tidak pernah diubah.
 
-## System requirements
+## Persyaratan Sistem
 
 - Windows 10/11 (64-bit)
-- Python 3.12 when running from source
-- Optional external tools (detected separately, not bundled):
-  - **LibreOffice** — Office (Word/Excel/PowerPoint) → PDF conversion
-  - **Tesseract** — OCR engine
+- Python 3.12 untuk menjalankan dari kode sumber
+- Alat eksternal opsional (terdeteksi terpisah, tidak disertakan):
+  - **LibreOffice** — konversi Office (Word/Excel/PowerPoint) → PDF
+  - **Tesseract** — mesin OCR
 
-## Run from source
+## Menjalankan dari Kode Sumber
 
 ```powershell
 py -3.12 -m venv .venv
@@ -43,47 +43,47 @@ pip install -r requirements.txt
 python app\main.py
 ```
 
-Run the test suite with `python -m pytest`.
+Jalankan rangkaian tes dengan `python -m pytest`.
 
-## Quick usage guide
+## Cara Menggunakan
 
-1. **Compress a PDF**
-   Choose **Compress PDF** → drag your file into the drop zone → pick a compression level → **Compress PDF** → select a save location. The result opens in Explorer.
+1. **Kompres PDF**
+   Pilih **Kompres PDF** → seret file ke area drop → pilih tingkat kompresi → **Kompres PDF** → tentukan lokasi penyimpanan. Hasilnya terbuka di Explorer.
 
-2. **Merge PDFs**
-   Choose **Merge PDF** → add two or more files → drag them in the list into the order you want → **Merge PDF**.
+2. **Gabung PDF**
+   Pilih **Gabung PDF** → tambahkan dua file atau lebih → seret dalam daftar sesuai urutan → **Gabung PDF**.
 
-3. **Split / extract pages**
-   Choose **Split PDF** → pick *Every page*, *Every N pages*, or *Page range* (e.g. `1-3, 5`) → run and choose the output folder.
+3. **Pecah / ekstrak halaman**
+   Pilih **Pecah PDF** → pilih *Setiap halaman*, *Setiap N halaman*, atau *Rentang halaman* (mis. `1-3, 5`) → jalankan dan pilih folder keluaran.
 
-4. **Extract text or images**
-   Choose **Extract PDF** → either *Text to .txt* (saves a readable text file with page markers) or *Images to files* (PNG/JPG/WEBP, with an optional minimum size filter).
+4. **Ekstrak teks atau gambar**
+   Pilih **Ekstrak PDF** → pilih *Teks ke .txt* (menyimpan file teks dengan penanda halaman) atau *Gambar ke file* (PNG/JPG/WEBP, dengan filter ukuran minimum).
 
-5. **PDF to Excel**
-   Choose **Convert Files** → select *PDF to Excel* → add your PDF → choose where to save the `.xlsx`. Tables are detected automatically — one worksheet per table, with headings highlighted.
+5. **PDF ke Excel**
+   Pilih **Konversi File** → pilih *PDF to Excel* → tambahkan PDF → pilih lokasi `.xlsx`. Seluruh konten halaman (baris teks serta gambar) disusun ke dalam worksheet secara berurutan.
 
-6. **PDF to Word**
-   Choose **Convert Files** → *PDF to Word* → add a PDF → save as `.docx`. Best-effort conversion: text, paragraphs, and images are prioritized; very complex layouts may not be pixel-perfect.
+6. **PDF ke Word**
+   Pilih **Konversi File** → *PDF to Word* → tambahkan PDF → simpan sebagai `.docx`. Konversi bersifat best-effort: teks, paragraf, dan gambar diprioritaskan; tata letak yang sangat kompleks mungkin tidak sempurna.
 
-7. **Protect or unlock**
-   Choose **Protect / Unlock** → set a password to encrypt, or provide the correct password to remove protection.
+7. **Lindungi atau buka kunci**
+   Pilih **Lindungi / Buka Kunci** → atur kata sandi untuk mengenkripsi, atau berikan kata sandi yang benar untuk menghapus proteksi.
 
-8. **OCR a scan**
-   Choose **OCR PDF / Image** → point PDF Master to your Tesseract install if needed, then select a scan to make it searchable.
+8. **OCR hasil scan**
+   Pilih **OCR PDF / Gambar** → arahkan PDF Master ke instalasi Tesseract jika diperlukan, lalu pilih scan agar dapat dicari.
 
-## Building the portable release
+## Membangun Rilis Portable
 
 ```powershell
-build.bat            # runs tests, prepares assets, builds dist\PDF-Master\PDFMaster.exe
-installer.bat        # additionally builds the Inno Setup installer (requires Inno Setup 6)
+build.bat            # menjalankan tes, menyiapkan aset, membangun dist\PDF-Master\PDFMaster.exe
+installer.bat        # tambahan: membangun installer Inno Setup (memerlukan Inno Setup 6)
 ```
 
-## Privacy
+## Privasi
 
-PDF Master processes documents **locally**. It contains no telemetry or analytics and does not upload document contents, filenames, or activity. Optional update checks query GitHub for a newer version number only, and downloads never happen without your permission.
+PDF Master memproses dokumen secara **lokal**. Tidak ada telemetri atau analitik, dan tidak mengunggah isi dokumen, nama file, maupun aktivitas. Pemeriksaan pembaruan opsional hanya menanyakan nomor versi ke GitHub; unduhan tidak pernah terjadi tanpa izin Anda.
 
 ## Developer
 
-Developed by **Fahmikip** · https://github.com/fahmikip · © 2026 Fahmikip
+Dikembangkan oleh **Fahmikip** · https://github.com/fahmikip · © 2026 Fahmikip
 
-Portable Windows builds: see the **Releases** page.
+Build portabel Windows: lihat halaman **Releases**.

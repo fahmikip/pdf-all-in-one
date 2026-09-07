@@ -1,80 +1,51 @@
-"""Best-effort local PDF to Excel (XLSX) table conversion."""
+"""Best-effort local PDF to Excel (XLSX) content export."""
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
 from typing import Callable
 
 import fitz
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill
+from openpyxl.drawing.image import Image as XlImage
+from openpyxl.styles import Alignment, Font
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
 from core.utils.validation import validate_pdf
 
 Progress = Callable[[int, str], None]
 
-HEADER_FILL = PatternFill("solid", fgColor="1E293B")
-HEADER_TEXT = Font(bold=True, color="FFFFFF")
+HEADER_TEXT = Font(bold=True)
+WRAP = Alignment(wrap_text=True, vertical="top")
+COLUMN_WIDTH = 100.0
+ROW_HEIGHT_PX = 18.0
 
 
-def _sheet_name(page_number: int, table_number: int) -> str:
-    name = f"Page {page_number}" + (f"-{table_number}" if table_number > 1 else "")
-    return name[:31]
+def _sheet_name(page_number: int) -> str:
+    return f"Page {page_number}"[:31]
 
 
-def _table_from_words(page, col_tolerance: float = 6.0, row_band: float = 5.0) -> list[list[str]] | None:
-    """Heuristic: build a grid from word positions when no ruled table is found."""
-    words = [(word[0], word[1], word[4]) for word in page.get_text("words") if word[4].strip()]
-    if len(words) < 4:
-        return None
-    anchors: list[float] = []
-    for x0, _, _ in sorted(words, key=lambda word: word[0]):
-        if not anchors or x0 - anchors[-1] > col_tolerance:
-            anchors.append(x0)
-    if len(anchors) < 2:
-        return None
-    rows: dict[int, list[tuple[float, str]]] = {}
-    for x0, y0, text in words:
-        rows.setdefault(round(y0 / row_band), []).append((x0, text))
-    grid: list[list[str]] = []
-    for key in sorted(rows):
-        row = [""] * len(anchors)
-        for x0, text in sorted(rows[key], key=lambda word: word[0]):
-            index = min(range(len(anchors)), key=lambda i: abs(x0 - anchors[i]))
-            row[index] = (row[index] + " " + text).strip()
-        grid.append(row)
-    return grid if any(any(cell for cell in row) for row in grid[1:]) else None
-
-
-def _clean_grid(grid: list[list[str]]) -> list[list[str]]:
-    """Remove fully-empty rows produced by the detection heuristics."""
-    return [row for row in grid if any(str(cell).strip() for cell in row)]
-
-
-def _extract_page_tables(page) -> list[list[list[str]]]:
-    """Return a list of grids (list of rows) found on the page."""
-    tables = page.find_tables().tables
-    if not tables:
-        tables = page.find_tables(strategy="text", text_tolerance=3).tables
-    grids: list[list[list[str]]] = []
-    for table in tables:
-        if not table.col_count or not table.row_count:
-            continue
-        extracted = table.extract()
-        if extracted:
-            grids.append(_clean_grid(extracted))
-    if not grids:
-        fallback = _table_from_words(page)
-        if fallback:
-            grids.append(fallback)
-    return grids
+def _page_items(page) -> list[tuple[float, str, object]]:
+    """Collect (top, kind, payload) items where kind is 'line' or 'image'."""
+    items: list[tuple[float, str, object]] = []
+    for block in page.get_text("blocks"):
+        x0, y0, x1, y1, text = block[0], block[1], block[2], block[3], block[4]
+        for line in text.splitlines():
+            if line.strip():
+                items.append((y0, "line", (x0, line)))
+    for info in page.get_image_info(xrefs=True):
+        x0, y0 = info["bbox"][:2]
+        xref = info.get("xref")
+        if xref:
+            items.append((y0, "image", (x0, xref, info)))
+    items.sort(key=lambda item: (item[0], item[2][0] if item[1] == "line" else 0.0))
+    return items
 
 
 def pdf_to_excel(
-    source: str | Path, destination: str | Path, *, text_fallback: bool = True,
-    progress: Progress | None = None,
+    source: str | Path, destination: str | Path, *, progress: Progress | None = None,
 ) -> Path:
-    """Detect tables on each page and write them to an XLSX workbook."""
+    """Export each page as a worksheet: text lines inline and images embedded."""
     info = validate_pdf(source)
     output = Path(destination).resolve()
     ensure_distinct_paths(info.path, output)
@@ -84,27 +55,35 @@ def pdf_to_excel(
     created = 0
     with fitz.open(info.path) as pdf:
         for page_index, page in enumerate(pdf):
-            grids = _extract_page_tables(page)
-            if not grids:
-                if text_fallback:
-                    lines = [line for line in (block[4].strip() for block in page.get_text("blocks")) if line]
-                    if lines:
-                        created += 1
-                        sheet = workbook.create_sheet(title=f"Page {page_index + 1} Text")
-                        for line in lines: sheet.append([line])
-                if progress: progress(round((page_index + 1) / pdf.page_count * 95), f"Scanned page {page_index + 1}")
+            items = _page_items(page)
+            if not items:
                 continue
-            for table_index, grid in enumerate(grids, start=1):
-                created += 1
-                sheet = workbook.create_sheet(title=_sheet_name(page_index + 1, table_index))
-                for row_index, row in enumerate(grid):
-                    sheet.append([text if text is not None else "" for text in row])
-                    if row_index == 0:
-                        for cell in sheet[1]:
-                            cell.font = HEADER_TEXT; cell.fill = HEADER_FILL
-                if progress: progress(round((page_index + 1) / pdf.page_count * 95), f"Page {page_index + 1} · {len(grid)} rows")
+            created += 1
+            sheet = workbook.create_sheet(title=_sheet_name(page_index + 1))
+            sheet.column_dimensions["A"].width = COLUMN_WIDTH
+            row = 1
+            for _, kind, payload in items:
+                if kind == "line":
+                    _, text = payload
+                    cell = sheet.cell(row=row, column=1, value=text)
+                    cell.font = HEADER_TEXT if row == 1 else None
+                    cell.alignment = WRAP
+                    row += 1
+                    continue
+                _, xref, info_dict = payload
+                try:
+                    data = pdf.extract_image(xref)["image"]
+                    canvas = XlImage(BytesIO(data))
+                    canvas.width = int(info_dict["width"])
+                    canvas.height = int(info_dict["height"])
+                    sheet.add_image(canvas, f"A{row}")
+                    sheet.row_dimensions[row].height = info_dict["height"]
+                    row += max(1, round(info_dict["height"] / ROW_HEIGHT_PX))
+                except Exception:
+                    continue
+            if progress: progress(round((page_index + 1) / pdf.page_count * 95), f"Exported page {page_index + 1}")
     if created == 0:
-        raise ValueError("No tables were detected in this PDF. Try PDF to Word instead.")
+        raise ValueError("The PDF contains no extractable text or images.")
     with atomic_output(output) as temporary: workbook.save(temporary)
     if progress: progress(100, output.name)
     return output
