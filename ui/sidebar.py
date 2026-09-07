@@ -41,7 +41,7 @@ class Sidebar(QFrame):
         self.buttons: dict[str, QPushButton] = {}
         groups = {
             "": [("home", "Home")],
-            "PDF TOOLS": [("compress", "Compress PDF"), ("merge", "Merge PDF"), ("split", "Split PDF"), ("organize", "Organize PDF")],
+            "PDF TOOLS": [("compress", "Compress PDF"), ("merge", "Merge PDF"), ("split", "Split PDF"), ("organize", "Organize PDF"), ("extract", "Extract PDF")],
             "CONVERT": [("convert", "Convert Files")],
             "EDIT": [("edit", "Watermark & More")],
             "SECURITY": [("security", "Protect / Unlock")],

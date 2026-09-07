@@ -17,6 +17,7 @@ from ui.pages.security import SecurityPage
 from ui.pages.history import HistoryPage
 from ui.pages.settings import SettingsPage
 from ui.pages.ocr import OcrPage
+from ui.pages.extract import ExtractPage
 from ui.pages.batch import BatchPage
 from ui.pages.placeholder import PlaceholderPage
 from ui.sidebar import Sidebar
@@ -40,6 +41,7 @@ class MainWindow(QMainWindow):
             "merge": MergePage(), "split": SplitPage(), "organize": OrganizerPage(), "convert": ConverterPage(), "edit": EditPage(), "security": SecurityPage(),
             "history": HistoryPage(), "settings": SettingsPage(settings, config_store),
             "ocr": OcrPage(),
+            "extract": ExtractPage(),
             "batch": BatchPage(settings.default_compression),
         }
         labels = {}

@@ -21,6 +21,7 @@ PATHS = {
     "about": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
     "privacy": '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
     "download": '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+    "extract": '<path d="M12 3v10M8 9l4 4 4-4M4 15v6h16v-6"/><path d="M8 18h8"/>',
     "app": '<path d="M6 2h9l5 5v15H6Z"/><path d="M15 2v6h6M9 13h8M9 17h6"/>',
 }
 
