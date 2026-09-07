@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from core.jobs.worker import FunctionWorker
 from core.pdf.converter import IMAGE_EXTENSIONS, images_to_pdf, pdf_to_images
 from core.office.libreoffice_converter import find_libreoffice, office_to_pdf
+from core.office.pdf_to_excel import pdf_to_excel
 from core.office.pdf_to_word import pdf_to_word
 from core.utils.validation import validate_pdf
 
@@ -46,7 +47,7 @@ class ConverterPage(QWidget):
         layout = QVBoxLayout(self); layout.setContentsMargins(38, 30, 38, 30); layout.setSpacing(12)
         title = QLabel("Convert Files"); title.setObjectName("title"); layout.addWidget(title)
         subtitle = QLabel("Convert images to PDF or export PDF pages as images—entirely offline."); subtitle.setObjectName("subtitle"); layout.addWidget(subtitle)
-        mode_row = QHBoxLayout(); mode_row.addWidget(QLabel("Conversion")); self.mode = QComboBox(); self.mode.addItems(["Image to PDF", "PDF to JPG", "PDF to PNG", "PDF to WebP", "Word to PDF", "Excel to PDF", "PowerPoint to PDF", "PDF to Word"]); self.mode.currentTextChanged.connect(self.mode_changed); mode_row.addWidget(self.mode, 1)
+        mode_row = QHBoxLayout(); mode_row.addWidget(QLabel("Conversion")); self.mode = QComboBox(); self.mode.addItems(["Image to PDF", "PDF to JPG", "PDF to PNG", "PDF to WebP", "Word to PDF", "Excel to PDF", "PowerPoint to PDF", "PDF to Word", "PDF to Excel"]); self.mode.currentTextChanged.connect(self.mode_changed); mode_row.addWidget(self.mode, 1)
         self.locate_office = QPushButton("Locate LibreOffice"); self.locate_office.clicked.connect(self.choose_libreoffice); mode_row.addWidget(self.locate_office); layout.addLayout(mode_row)
         self.files = ConversionFileList(); self.files.setDragDropMode(QListWidget.DragDropMode.InternalMove); self.files.setMinimumHeight(210); self.files.external_files_dropped.connect(self.add_paths); layout.addWidget(self.files)
         file_row = QHBoxLayout(); add = QPushButton("Add Files"); add.clicked.connect(self.choose); remove = QPushButton("Remove Selected"); remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow())); clear = QPushButton("Clear"); clear.clicked.connect(self.files.clear)
@@ -74,6 +75,7 @@ class ConverterPage(QWidget):
         if office: self.status.setText(f"LibreOffice: {self.libreoffice or 'Not Found'}")
         elif to_pdf: self.status.setText("Add images to begin")
         elif mode == "PDF to Word": self.status.setText("Complex layouts may not convert perfectly. Text, paragraphs, and images are prioritized.")
+        elif mode == "PDF to Excel": self.status.setText("Tables are detected per page and exported to XLSX worksheets.")
         else: self.status.setText("Add one PDF to begin")
 
     def choose_libreoffice(self) -> None:
@@ -85,8 +87,12 @@ class ConverterPage(QWidget):
         if mode == "Image to PDF":
             paths, _ = QFileDialog.getOpenFileNames(self, "Choose images", "", "Images (*.jpg *.jpeg *.png *.webp *.bmp *.tif *.tiff)")
         else:
-            filters = {"Word to PDF": "Word files (*.doc *.docx)", "Excel to PDF": "Excel files (*.xls *.xlsx)", "PowerPoint to PDF": "PowerPoint files (*.ppt *.pptx)"}
-            path, _ = QFileDialog.getOpenFileName(self, "Choose source file", "", filters.get(mode, "PDF files (*.pdf)")); paths = [path] if path else []
+            mode_pdf_extract = mode in {"PDF to Word", "PDF to Excel"}
+            if mode_pdf_extract:
+                path, _ = QFileDialog.getOpenFileName(self, "Choose source file", "", "PDF files (*.pdf)"); paths = [path] if path else []
+            else:
+                filters = {"Word to PDF": "Word files (*.doc *.docx)", "Excel to PDF": "Excel files (*.xls *.xlsx)", "PowerPoint to PDF": "PowerPoint files (*.ppt *.pptx)"}
+                path, _ = QFileDialog.getOpenFileName(self, "Choose source file", "", filters.get(mode, "PDF files (*.pdf)")); paths = [path] if path else []
             self.files.clear()
         self.add_paths(paths)
 
@@ -126,6 +132,12 @@ class ConverterPage(QWidget):
             output, _ = QFileDialog.getSaveFileName(self, "Save PDF", str(Path(paths[0]).with_suffix(".pdf")), "PDF files (*.pdf)")
             if not output: return
             function, args, kwargs = office_to_pdf, (paths[0], output), {"executable": self.libreoffice}
+        elif mode == "PDF to Excel":
+            try: validate_pdf(paths[0])
+            except Exception as exc: QMessageBox.warning(self, "Cannot open PDF", str(exc)); return
+            output, _ = QFileDialog.getSaveFileName(self, "Save Excel workbook", str(Path(paths[0]).with_suffix(".xlsx")), "Excel files (*.xlsx)")
+            if not output: return
+            function, args, kwargs = pdf_to_excel, (paths[0], output), {}
         else:
             output, _ = QFileDialog.getSaveFileName(self, "Save Word document", str(Path(paths[0]).with_suffix(".docx")), "Word files (*.docx)")
             if not output: return

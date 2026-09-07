@@ -14,7 +14,8 @@ def test_main_window_starts() -> None:
     assert window.pages["split"].__class__.__name__ == "SplitPage"
     assert window.pages["organize"].__class__.__name__ == "OrganizerPage"
     assert window.pages["convert"].__class__.__name__ == "ConverterPage"
-    assert window.pages["convert"].mode.count() == 8
+    assert window.pages["convert"].mode.count() == 9
+    assert window.pages["extract"].__class__.__name__ == "ExtractPage"
     assert window.pages["edit"].__class__.__name__ == "EditPage"
     assert window.pages["security"].__class__.__name__ == "SecurityPage"
     assert window.pages["history"].__class__.__name__ == "HistoryPage"
