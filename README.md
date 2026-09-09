@@ -2,7 +2,7 @@
 
 **PDF Master** adalah perangkat PDF all-in-one untuk Windows yang berjalan sepenuhnya **offline**, dibangun dengan Python 3.12 dan PySide6. Semua operasi dokumen dijalankan di komputer Anda sendiri — tidak ada yang diunggah, dan tidak ada pelacakan atau telemetri.
 
-Versi saat ini: **v1.2.0**
+Versi saat ini: **v1.3.0**
 
 ---
 
