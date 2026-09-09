@@ -1,5 +1,6 @@
 """Local application settings and dependency health."""
 from pathlib import Path
+from typing import Callable
 
 from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout, QHBoxLayout, QLabel, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
@@ -10,7 +11,7 @@ from ui.themes.palette import stylesheet_for
 
 
 class SettingsPage(QWidget):
-    def __init__(self, settings: Settings, store: ConfigStore) -> None:
+    def __init__(self, settings: Settings, store: ConfigStore, on_check_updates: Callable[[], None] | None = None) -> None:
         super().__init__(); self.settings = settings; self.store = store; layout = QVBoxLayout(self); layout.setContentsMargins(36, 28, 36, 28)
         title = QLabel("Settings"); title.setObjectName("title"); layout.addWidget(title); form = QFormLayout()
         self.theme = QComboBox(); self.theme.addItems(["System", "Light", "Dark"]); self.theme.setCurrentText(settings.theme.title()); form.addRow("Theme", self.theme)
@@ -18,6 +19,8 @@ class SettingsPage(QWidget):
         self.compression = QComboBox(); self.compression.addItems(["Low", "Recommended", "High", "Maximum"]); self.compression.setCurrentText(settings.default_compression.title()); form.addRow("Default compression", self.compression)
         self.dpi = QComboBox(); self.dpi.addItems(["72", "96", "150", "200", "300", "600"]); self.dpi.setCurrentText(str(settings.default_dpi)); form.addRow("Default DPI", self.dpi)
         self.update_checks = QCheckBox("Notify me when a new GitHub release is available"); self.update_checks.setChecked(settings.check_updates); form.addRow("Updates", self.update_checks)
+        if on_check_updates is not None:
+            check = QPushButton("Check Now"); check.clicked.connect(on_check_updates); form.addRow("", check)
         save = QPushButton("Save Settings"); save.setObjectName("primary"); save.clicked.connect(self.save); form.addRow(save); layout.addLayout(form)
         heading = QLabel("Dependencies"); heading.setObjectName("section"); layout.addWidget(heading); self.dependencies = QTableWidget(0, 2); self.dependencies.setHorizontalHeaderLabels(["Component", "Status / Location"]); self.dependencies.horizontalHeader().setStretchLastSection(True); layout.addWidget(self.dependencies)
         actions = QHBoxLayout(); refresh = QPushButton("Refresh Dependencies"); refresh.clicked.connect(self.refresh); clear_temp = QPushButton("Clear Temporary Files"); clear_temp.clicked.connect(self.clear_temp); clear_history = QPushButton("Clear History"); clear_history.clicked.connect(lambda: HistoryStore().clear())

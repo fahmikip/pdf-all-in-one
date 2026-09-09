@@ -43,7 +43,7 @@ class Sidebar(QFrame):
             "": [("home", "Home")],
             "PDF TOOLS": [("compress", "Compress PDF"), ("merge", "Merge PDF"), ("split", "Split PDF"), ("organize", "Organize PDF"), ("extract", "Extract PDF")],
             "CONVERT": [("convert", "Convert Files")],
-            "EDIT": [("edit", "Watermark & More")],
+            "EDIT": [("edit", "Watermark & More"), ("forms", "PDF Forms & Sign")],
             "SECURITY": [("security", "Protect / Unlock")],
             "OCR": [("ocr", "OCR PDF / Image")],
             "ADVANCED": [("batch", "Batch Processing")],

@@ -23,6 +23,7 @@ PATHS = {
     "download": '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
     "extract": '<path d="M12 3v10M8 9l4 4 4-4M4 15v6h16v-6"/><path d="M8 18h8"/>',
     "app": '<path d="M6 2h9l5 5v15H6Z"/><path d="M15 2v6h6M9 13h8M9 17h6"/>',
+    "forms": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h5M7 12h10M7 16h7"/><path d="M16.5 15.5v-4M14.5 13.5h4"/>',
 }
 
 
