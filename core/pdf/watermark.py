@@ -10,6 +10,7 @@ import fitz
 from PIL import Image
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
+from core.utils.fonts import resolve_font
 from core.utils.validation import parse_page_ranges, validate_pdf
 
 POSITIONS = {"top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"}
@@ -75,6 +76,35 @@ def place_image(source: str | Path, destination: str | Path, image_path: str | P
             x, y = _point(page.rect, position, margin, width, height)
             page.insert_image(fitz.Rect(x, y, x + width, y + height), filename=str(image_source), overlay=True, keep_proportion=True)
             if progress: progress(round((sequence + 1) / len(selected) * 95), f"Placed image on page {index + 1}")
+        with atomic_output(output) as temporary: document.save(temporary, garbage=3, deflate=True)
+    if progress: progress(100, output.name)
+    return output
+
+
+def insert_objects(source: str | Path, destination: str | Path, *, page_index: int = 0, items, progress=None) -> Path:
+    """Render interactive editor objects (images and styled text) onto a single page."""
+    info = validate_pdf(source); output = Path(destination).resolve(); ensure_distinct_paths(info.path, output)
+    if not 0 <= page_index < info.pages: raise ValueError(f"Page {page_index + 1} does not exist.")
+    with fitz.open(info.path) as document:
+        page = document[page_index]
+        for item in items:
+            if "rect" not in item: continue
+            rect = fitz.Rect(*item["rect"])
+            if rect.width <= 0 or rect.height <= 0: continue
+            kind = item.get("type")
+            if kind == "image":
+                image_source = Path(item["image"]).resolve()
+                if not image_source.is_file(): raise ValueError(f"Image file does not exist: {image_source.name}")
+                with Image.open(image_source) as image:
+                    stream = BytesIO(); image.convert("RGB").save(stream, "PNG"); image_bytes = stream.getvalue()
+                page.insert_image(rect, stream=image_bytes, overlay=True)
+            elif kind == "text" and item.get("text"):
+                color = tuple(max(0, min(1, channel / 255)) for channel in item.get("color", (0, 0, 0)))
+                fontname = "helv"; fontfile = None; set_simple = 0
+                if resolved := resolve_font(item.get("font", "")):
+                    fontname = "f0"; fontfile = str(resolved); set_simple = 1
+                page.insert_textbox(rect, item["text"], fontsize=max(1, item.get("size", 12)), fontname=fontname, fontfile=fontfile, color=color, overlay=True, set_simple=set_simple)
+            if progress: progress(10, f"Applying objects…")
         with atomic_output(output) as temporary: document.save(temporary, garbage=3, deflate=True)
     if progress: progress(100, output.name)
     return output
