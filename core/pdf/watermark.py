@@ -56,6 +56,30 @@ def add_image_watermark(source: str | Path, destination: str | Path, image_path:
     return output
 
 
+def place_image(source: str | Path, destination: str | Path, image_path: str | Path, *, position: str = "center", width_scale: float = .5, margin: float = 24, page_range: str = "1", progress=None) -> Path:
+    """Insert a photo (JPEG/PNG/…) onto one or more pages at a chosen position."""
+    info = validate_pdf(source); output = Path(destination).resolve(); ensure_distinct_paths(info.path, output)
+    if output.suffix.lower() != ".pdf": raise ValueError("Insert image output must use .pdf.")
+    if position not in POSITIONS: raise ValueError("Invalid image position.")
+    if not 0 < width_scale <= 1: raise ValueError("Image width scale must be between 0 and 1.")
+    image_source = Path(image_path).resolve()
+    if not image_source.is_file(): raise ValueError("Image file does not exist.")
+    with Image.open(image_source) as image:
+        image.verify()
+    with Image.open(image_source) as image:
+        ratio = image.height / image.width
+    with fitz.open(info.path) as document:
+        selected = _pages(page_range, info.pages)
+        for sequence, index in enumerate(selected):
+            page = document[index]; width = page.rect.width * width_scale; height = width * ratio
+            x, y = _point(page.rect, position, margin, width, height)
+            page.insert_image(fitz.Rect(x, y, x + width, y + height), filename=str(image_source), overlay=True, keep_proportion=True)
+            if progress: progress(round((sequence + 1) / len(selected) * 95), f"Placed image on page {index + 1}")
+        with atomic_output(output) as temporary: document.save(temporary, garbage=3, deflate=True)
+    if progress: progress(100, output.name)
+    return output
+
+
 def add_page_numbers(source: str | Path, destination: str | Path, *, template: str = "{page} / {pages}", position: str = "bottom-center", font_size: float = 10, margin: float = 24, start_number: int = 1, page_range: str = "") -> Path:
     info = validate_pdf(source); output = Path(destination).resolve(); ensure_distinct_paths(info.path, output)
     with fitz.open(info.path) as document:
