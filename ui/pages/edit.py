@@ -9,8 +9,9 @@ from PySide6.QtWidgets import QComboBox, QFileDialog, QFormLayout, QHBoxLayout, 
 
 from core.jobs.worker import FunctionWorker
 from core.pdf.metadata import read_metadata, write_metadata
-from core.pdf.watermark import add_header_footer, add_image_watermark, add_page_numbers, add_text_watermark, place_image
+from core.pdf.watermark import add_header_footer, add_image_watermark, add_page_numbers, add_text_watermark
 from core.utils.validation import validate_pdf
+from ui.pages.editor import EditorPage
 
 
 class EditPage(QWidget):
@@ -20,7 +21,7 @@ class EditPage(QWidget):
         title = QLabel("Edit PDF"); title.setObjectName("title"); layout.addWidget(title)
         source_row = QHBoxLayout(); self.source_label = QLabel("No PDF selected"); choose = QPushButton("Choose PDF"); choose.clicked.connect(self.choose_pdf); source_row.addWidget(self.source_label, 1); source_row.addWidget(choose); layout.addLayout(source_row)
         self.tabs = QTabWidget(); layout.addWidget(self.tabs, 1)
-        self._watermark_tab(); self._numbers_tab(); self._header_tab(); self._metadata_tab(); self._photo_tab()
+        self._watermark_tab(); self._numbers_tab(); self._header_tab(); self._metadata_tab(); self._editor_tab()
         self.status = QLabel("All changes are saved to a new file."); self.status.setObjectName("muted"); layout.addWidget(self.status)
 
     def choose_pdf(self) -> None:
@@ -63,19 +64,8 @@ class EditPage(QWidget):
         name, _ = QFileDialog.getOpenFileName(self, "Choose watermark image", "", "Images (*.png *.jpg *.jpeg *.webp)")
         if name: self.wm_type.setCurrentText("Image"); self.wm_content.setText(name)
 
-    def _photo_tab(self) -> None:
-        page = QWidget(); form = QFormLayout(page)
-        row = QHBoxLayout(); self.photo_path = QLineEdit(); self.photo_path.setPlaceholderText("Choose a photo or image…"); browse = QPushButton("Browse"); browse.clicked.connect(self.choose_photo); row.addWidget(self.photo_path, 1); row.addWidget(browse); form.addRow("Photo", row)
-        self.photo_position = QComboBox(); self.photo_position.addItems(["center", "top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"]); form.addRow("Position", self.photo_position)
-        self.photo_size = QSpinBox(); self.photo_size.setRange(5, 100); self.photo_size.setSuffix(" % of page width"); self.photo_size.setValue(50); form.addRow("Size", self.photo_size)
-        self.photo_pages = QLineEdit(); self.photo_pages.setPlaceholderText("1, or 1-3, 5"); self.photo_pages.setText("1"); form.addRow("Pages", self.photo_pages)
-        button = QPushButton("Place Photo"); button.setObjectName("primary"); button.clicked.connect(self.apply_photo); form.addRow(button)
-        hint = QLabel("JPEG, JPG, and PNG photos are supported. The original PDF is never modified."); hint.setObjectName("muted"); form.addRow(hint)
-        self.tabs.addTab(page, "Place Photo")
-
-    def choose_photo(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, "Choose photo", "", "Images (*.jpeg *.jpg *.png *.webp *.bmp)")
-        if name: self.photo_path.setText(name)
+    def _editor_tab(self) -> None:
+        self.tabs.addTab(EditorPage(), "Insert & Edit")
 
     def _output(self, suffix: str) -> str:
         if not self.source: QMessageBox.information(self, "Choose PDF", "Choose a PDF first."); return ""
@@ -100,11 +90,6 @@ class EditPage(QWidget):
 
     def apply_header(self) -> None:
         output = self._output("header_footer"); self._run(add_header_footer, output, {key: field.text() for key, field in self.header_fields.items()})
-
-    def apply_photo(self) -> None:
-        if not self.photo_path.text(): QMessageBox.information(self, "Choose a photo", "Choose a photo or image first."); return
-        output = self._output("photo")
-        self._run(place_image, output, self.photo_path.text(), position=self.photo_position.currentText(), width_scale=self.photo_size.value() / 100, page_range=self.photo_pages.text())
 
     def _load_metadata(self) -> None:
         if self.source:

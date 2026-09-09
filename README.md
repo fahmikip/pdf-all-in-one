@@ -16,7 +16,7 @@ Versi saat ini: **v1.3.0**
 | Alat PDF | Susun PDF | Urut ulang, putar, dan hapus halaman |
 | Alat PDF | Ekstrak PDF | Ekspor teks ke `.txt` atau gambar tertanam ke PNG / JPG / WEBP |
 | Konversi | Konversi File | Gambar→PDF, PDF→JPG/PNG/WebP, Word/Excel/PowerPoint→PDF (LibreOffice), PDF→Word, PDF→Excel |
-| Edit | Watermark & Lainnya | Watermark teks/gambar, nomor halaman, header & footer, letakkan foto (JPEG/JPG/PNG), edit metadata |
+| Edit | Watermark & Lainnya | Watermark teks/gambar, nomor halaman, header & footer, edit metadata, **Insert & Edit** (letakkan foto, geser, ubah ukuran, tambah teks dengan pilihan font, ukuran & warna) |
 | Edit | PDF Forms & Signature | Isi formulir PDF interaktif (teks/centang), tambah tanda tangan visual (gambar + nama) |
 | Keamanan | Lindungi / Buka Kunci | Proteksi kata sandi PDF dan buka kunci resmi |
 | OCR | OCR PDF / Gambar | Buat hasil scan dapat dicari (memerlukan Tesseract) |
@@ -78,8 +78,8 @@ Jalankan rangkaian tes dengan `python -m pytest`.
 10. **Tanda tangan visual**
     Pilih **PDF Forms & Signature** → tab *Sign Document* → pilih PDF + gambar tanda tangan → atur halaman & posisi → **Sign PDF**.
 
-11. **Letakkan foto ke PDF**
-    Pilih **Edit PDF** → tab *Place Photo* → pilih foto (JPEG/JPG/PNG) → atur posisi, ukuran, dan halaman → **Place Photo**.
+11. **Editor objek (Insert & Edit)**
+    Pilih **Edit PDF** → tab *Insert & Edit* → pilih PDF → **Add Image** untuk foto (JPEG/JPG/PNG) atau **Add Text** untuk teks. Geser objek untuk memindah posisi, tarik titik sudut untuk mengubah ukuran gambar, pilih font/ukuran/warna di panel, pilih halaman, lalu **Save PDF**.
 
 ## Membangun Rilis Portable
 

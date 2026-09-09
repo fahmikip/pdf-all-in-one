@@ -103,7 +103,12 @@ def insert_objects(source: str | Path, destination: str | Path, *, page_index: i
                 fontname = "helv"; fontfile = None; set_simple = 0
                 if resolved := resolve_font(item.get("font", "")):
                     fontname = "f0"; fontfile = str(resolved); set_simple = 1
-                page.insert_textbox(rect, item["text"], fontsize=max(1, item.get("size", 12)), fontname=fontname, fontfile=fontfile, color=color, overlay=True, set_simple=set_simple)
+                text = item["text"]
+                kwargs = {"fontsize": max(1, item.get("size", 12)), "fontname": fontname, "fontfile": fontfile, "color": color, "set_simple": set_simple, "overlay": True}
+                if "\n" in text:
+                    page.insert_textbox(rect, text, align=fitz.TEXT_ALIGN_LEFT, **kwargs)
+                else:
+                    page.insert_text((rect.x0, rect.y0 + rect.height * .72), text, **kwargs)
             if progress: progress(10, f"Applying objects…")
         with atomic_output(output) as temporary: document.save(temporary, garbage=3, deflate=True)
     if progress: progress(100, output.name)

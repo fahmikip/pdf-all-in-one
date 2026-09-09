@@ -30,7 +30,7 @@ def install_exception_handler() -> None:
 def create_application(argv: list[str] | None = None) -> tuple[QApplication, MainWindow]:
     configure_logging()
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    app = QApplication(argv or sys.argv)
+    app = QApplication.instance() or QApplication(argv or sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(VERSION)
     app.setOrganizationName("Fahmikip")
