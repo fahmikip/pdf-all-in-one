@@ -36,7 +36,7 @@ class FormsPage(QWidget):
         self.status = QLabel("Choose a PDF to begin"); self.status.setObjectName("muted"); layout.addWidget(self.status)
 
     def _choose_source_row(self) -> QHBoxLayout:
-        row = QHBoxLayout(); self.source_label = QLabel("No PDF selected"); choose = QPushButton("Choose PDF"); choose.clicked.connect(self.choose); row.addWidget(self.source_label, 1); row.addWidget(choose)
+        row = QHBoxLayout(); self.source_label = QLabel("No PDF selected"); choose = QPushButton("Choose PDF"); choose.setObjectName("ghost"); choose.clicked.connect(self.choose); row.addWidget(self.source_label, 1); row.addWidget(choose)
         return row
 
     def _fill_tab(self) -> QWidget:
@@ -47,14 +47,14 @@ class FormsPage(QWidget):
         self.fields.verticalHeader().setVisible(False)
         box.addWidget(self.fields, 1)
         actions = QHBoxLayout(); self.fill_progress = QProgressBar(); self.fill_progress.hide(); actions.addWidget(self.fill_progress, 1)
-        save = QPushButton("Save Filled PDF"); save.setObjectName("primary"); save.clicked.connect(self.save_filled); actions.addWidget(save)
+        save = QPushButton("Save Filled PDF"); save.setObjectName("success"); save.clicked.connect(self.save_filled); actions.addWidget(save)
         box.addLayout(actions)
         hint = QLabel("Set values in the New Value column, then save a copy. The original is never modified."); hint.setObjectName("muted"); box.addWidget(hint)
         return tab
 
     def _sign_tab(self) -> QWidget:
         tab = QWidget(); box = QVBoxLayout(tab); box.addLayout(self._choose_source_row())
-        image_row = QHBoxLayout(); self.image_label = QLabel("No signature image chosen"); choose = QPushButton("Choose Signature Image"); choose.clicked.connect(self.choose_image); image_row.addWidget(self.image_label, 1); image_row.addWidget(choose); box.addLayout(image_row)
+        image_row = QHBoxLayout(); self.image_label = QLabel("No signature image chosen"); choose = QPushButton("Choose Signature Image"); choose.setObjectName("ghost"); choose.clicked.connect(self.choose_image); image_row.addWidget(self.image_label, 1); image_row.addWidget(choose); box.addLayout(image_row)
         controls = QHBoxLayout()
         self.page = QSpinBox(); self.page.setRange(1, 999); self.page.setValue(1); controls.addWidget(QLabel("Page")); controls.addWidget(self.page)
         self.position = QComboBox(); self.position.addItems(["Bottom-left", "Bottom-right", "Top-left", "Top-right"]); controls.addWidget(QLabel("Position")); controls.addWidget(self.position)

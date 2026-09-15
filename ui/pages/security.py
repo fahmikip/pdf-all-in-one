@@ -18,7 +18,7 @@ class SecurityPage(QWidget):
         layout = QVBoxLayout(self); layout.setContentsMargins(38, 30, 38, 30)
         title = QLabel("PDF Security"); title.setObjectName("title"); layout.addWidget(title)
         subtitle = QLabel("Protect documents or remove encryption when you know the password."); subtitle.setObjectName("subtitle"); layout.addWidget(subtitle)
-        row = QHBoxLayout(); self.source_label = QLabel("No PDF selected"); choose = QPushButton("Choose PDF"); choose.clicked.connect(self.choose); row.addWidget(self.source_label, 1); row.addWidget(choose); layout.addLayout(row)
+        row = QHBoxLayout(); self.source_label = QLabel("No PDF selected"); choose = QPushButton("Choose PDF"); choose.setObjectName("ghost"); choose.clicked.connect(self.choose); row.addWidget(self.source_label, 1); row.addWidget(choose); layout.addLayout(row)
         tabs = QTabWidget(); layout.addWidget(tabs); protect = QWidget(); form = QFormLayout(protect)
         self.password = QLineEdit(); self.password.setEchoMode(QLineEdit.EchoMode.Password); self.password.textChanged.connect(self.update_strength); form.addRow("Open password", self.password)
         self.confirm = QLineEdit(); self.confirm.setEchoMode(QLineEdit.EchoMode.Password); form.addRow("Confirm password", self.confirm)
@@ -27,9 +27,9 @@ class SecurityPage(QWidget):
         self.printing = QCheckBox("Allow printing"); self.printing.setChecked(True); form.addRow(self.printing)
         self.copying = QCheckBox("Allow copying and accessibility"); self.copying.setChecked(True); form.addRow(self.copying)
         self.editing = QCheckBox("Allow editing"); form.addRow(self.editing)
-        button = QPushButton("Protect PDF"); button.setObjectName("primary"); button.clicked.connect(self.protect); form.addRow(button); tabs.addTab(protect, "Protect PDF")
+        button = QPushButton("Protect PDF"); button.setObjectName("danger"); button.clicked.connect(self.protect); form.addRow(button); tabs.addTab(protect, "Protect PDF")
         unlock = QWidget(); unlock_form = QFormLayout(unlock); self.unlock_password = QLineEdit(); self.unlock_password.setEchoMode(QLineEdit.EchoMode.Password); unlock_form.addRow("Current password", self.unlock_password)
-        unlock_button = QPushButton("Unlock PDF"); unlock_button.setObjectName("primary"); unlock_button.clicked.connect(self.unlock); unlock_form.addRow(unlock_button); tabs.addTab(unlock, "Unlock PDF")
+        unlock_button = QPushButton("Unlock PDF"); unlock_button.setObjectName("info"); unlock_button.clicked.connect(self.unlock); unlock_form.addRow(unlock_button); tabs.addTab(unlock, "Unlock PDF")
         self.status = QLabel("Passwords are never stored or logged."); self.status.setObjectName("muted"); layout.addWidget(self.status); layout.addStretch()
 
     def choose(self) -> None:

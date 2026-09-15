@@ -14,11 +14,11 @@ class OcrPage(QWidget):
         super().__init__(); self.source: Path | None = None; self.executable: Path | None = find_tesseract(); self.worker = None
         layout = QVBoxLayout(self); layout.setContentsMargins(38, 30, 38, 30)
         title = QLabel("OCR"); title.setObjectName("title"); layout.addWidget(title); subtitle = QLabel("Turn scanned PDFs and images into searchable PDFs or text."); subtitle.setObjectName("subtitle"); layout.addWidget(subtitle)
-        self.dependency = QLabel(); layout.addWidget(self.dependency); locate = QPushButton("Locate Tesseract"); locate.clicked.connect(self.locate); layout.addWidget(locate)
-        row = QHBoxLayout(); self.source_label = QLabel("No file selected"); choose = QPushButton("Choose PDF or Image"); choose.clicked.connect(self.choose); row.addWidget(self.source_label, 1); row.addWidget(choose); layout.addLayout(row)
+        self.dependency = QLabel(); layout.addWidget(self.dependency); locate = QPushButton("Locate Tesseract"); locate.setObjectName("ghost"); locate.clicked.connect(self.locate); layout.addWidget(locate)
+        row = QHBoxLayout(); self.source_label = QLabel("No file selected"); choose = QPushButton("Choose PDF or Image"); choose.setObjectName("ghost"); choose.clicked.connect(self.choose); row.addWidget(self.source_label, 1); row.addWidget(choose); layout.addLayout(row)
         form = QFormLayout(); self.language = QComboBox(); form.addRow("Language", self.language); self.output_format = QComboBox(); self.output_format.addItems(["Searchable PDF", "Text File"]); form.addRow("Output", self.output_format); self.dpi = QComboBox(); self.dpi.addItems(["150", "200", "300"]); self.dpi.setCurrentText("200"); form.addRow("DPI", self.dpi); layout.addLayout(form)
         self.progress = QProgressBar(); self.progress.hide(); layout.addWidget(self.progress); self.status = QLabel("OCR runs locally. Documents are never uploaded."); self.status.setObjectName("muted"); layout.addWidget(self.status)
-        process = QPushButton("Start OCR"); process.setObjectName("primary"); process.clicked.connect(self.start); layout.addWidget(process); layout.addStretch(); self.refresh_languages()
+        process = QPushButton("Start OCR"); process.setObjectName("info"); process.clicked.connect(self.start); layout.addWidget(process); layout.addStretch(); self.refresh_languages()
 
     def refresh_languages(self) -> None:
         languages = available_languages(self.executable); self.language.clear()

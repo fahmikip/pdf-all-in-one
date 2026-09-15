@@ -34,8 +34,8 @@ class ExtractPage(QWidget):
         options.addStretch(); layout.addLayout(options)
         self.progress = QProgressBar(); self.progress.hide(); layout.addWidget(self.progress)
         self.status = QLabel("Choose a PDF to begin"); self.status.setObjectName("muted"); layout.addWidget(self.status)
-        process = QPushButton("Extract"); process.setObjectName("primary"); process.clicked.connect(self.start); layout.addWidget(process)
-        self.open_button = QPushButton("Open Folder"); self.open_button.hide(); self.open_button.clicked.connect(self.open_result); layout.addWidget(self.open_button)
+        process = QPushButton("Extract"); process.setObjectName("info"); process.clicked.connect(self.start); layout.addWidget(process)
+        self.open_button = QPushButton("Open Folder"); self.open_button.setObjectName("success"); self.open_button.hide(); self.open_button.clicked.connect(self.open_result); layout.addWidget(self.open_button)
         layout.addStretch()
 
     def mode_changed(self, mode: str) -> None:

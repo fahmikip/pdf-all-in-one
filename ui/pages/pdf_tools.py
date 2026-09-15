@@ -36,7 +36,7 @@ class ToolPage(QWidget):
         subtitle = QLabel(description); subtitle.setObjectName("subtitle"); self.layout.addWidget(subtitle)
         self.progress = QProgressBar(); self.progress.setRange(0, 100); self.progress.hide(); self.layout.addWidget(self.progress)
         self.status = QLabel(""); self.status.setObjectName("muted"); self.layout.addWidget(self.status)
-        self.open_button = QPushButton("Open Result"); self.open_button.setObjectName("primary"); self.open_button.hide()
+        self.open_button = QPushButton("Open Result"); self.open_button.setObjectName("success"); self.open_button.hide()
         self.open_button.clicked.connect(self._open_result); self.layout.addWidget(self.open_button)
 
     def run_job(self, function: Callable[..., Any], *args: Any, with_progress: bool = False, **kwargs: Any) -> None:
@@ -90,7 +90,7 @@ class CompressPage(ToolPage):
         row = QHBoxLayout(); row.addWidget(QLabel("Compression level"))
         self.level = QComboBox(); self.level.addItems(["Low", "Recommended", "High", "Maximum"]); self.level.setCurrentText("Recommended"); row.addWidget(self.level, 1)
         self.level.currentTextChanged.connect(self.level_changed)
-        self.process = QPushButton("Compress PDF"); self.process.setObjectName("primary"); self.process.clicked.connect(self.start); row.addWidget(self.process)
+        self.process = QPushButton("Compress PDF"); self.process.setObjectName("success"); self.process.clicked.connect(self.start); row.addWidget(self.process)
         self.layout.insertLayout(3, row)
         self.aggressive = QCheckBox("Aggressive compression (smaller file, converts pages to images)")
         self.aggressive.setToolTip("Useful for already optimized PDFs. Text selection and search will be lost.")
@@ -142,8 +142,8 @@ class MergePage(ToolPage):
         self.drop.choose_requested.connect(self.choose); self.drop.files_dropped.connect(self.add_files)
         self.files = QListWidget(); self.files.setDragDropMode(QListWidget.DragDropMode.InternalMove); self.files.setMinimumHeight(150); self.layout.insertWidget(3, self.files)
         controls = QHBoxLayout()
-        remove = QPushButton("Remove Selected"); remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow()))
-        merge = QPushButton("Merge PDF"); merge.setObjectName("primary"); merge.clicked.connect(self.start)
+        remove = QPushButton("Remove Selected"); remove.setObjectName("ghost"); remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow()))
+        merge = QPushButton("Merge PDF"); merge.setObjectName("success"); merge.clicked.connect(self.start)
         controls.addWidget(remove); controls.addStretch(); controls.addWidget(merge); self.layout.insertLayout(4, controls); self.layout.addStretch()
 
     def choose(self) -> None:
@@ -180,7 +180,7 @@ class SplitPage(ToolPage):
         row = QHBoxLayout(); row.addWidget(QLabel("Mode")); self.mode = QComboBox(); self.mode.addItems(["Every page", "Every N pages", "Page range"]); self.mode.currentTextChanged.connect(self.mode_changed); row.addWidget(self.mode)
         self.value = QComboBox(); self.value.setEditable(True); self.value.addItem("1-3, 5"); self.value.hide(); row.addWidget(self.value, 1)
         self.count = QSpinBox(); self.count.setRange(1, 9999); self.count.setValue(2); self.count.hide(); row.addWidget(self.count)
-        process = QPushButton("Split PDF"); process.setObjectName("primary"); process.clicked.connect(self.start); row.addWidget(process)
+        process = QPushButton("Split PDF"); process.setObjectName("warning"); process.clicked.connect(self.start); row.addWidget(process)
         self.layout.insertLayout(3, row); self.layout.addStretch()
 
     def mode_changed(self, mode: str) -> None:

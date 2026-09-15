@@ -54,7 +54,14 @@ class HomePage(QScrollArea):
             detail = QLabel(description)
             detail.setObjectName("muted")
             card_layout.addWidget(detail)
-            button = QPushButton("Open tool  →")
+            btn_color = ["#4F46E5", "#059669", "#D97706", "#0891B2", "#7C3AED", "#E11D48", "#0D9488"][index % 7]
+            darkness = sum(int(btn_color[i:i+2], 16) for i in (1, 3, 5))
+            button = QPushButton(f"Open {name}  →")
+            button.setObjectName("cardAction")
+            button.setStyleSheet(
+                f"QPushButton#cardAction {{ background: {btn_color}; color: white; text-align: center; font-weight: 600; "
+                f"padding: 9px 14px; border-radius: 8px; border: none; }}"
+            )
             button.clicked.connect(lambda checked=False, tool=key: self.tool_requested.emit(tool))
             card_layout.addWidget(button)
             grid.addWidget(card, index // 3, index % 3)

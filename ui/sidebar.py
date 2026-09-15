@@ -1,10 +1,20 @@
-"""Primary application navigation."""
+"""Primary application navigation with color-coded sections."""
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from ui.icons import icon
+
+SECTION_COLORS = {
+    "PDF TOOLS": "#4F46E5",
+    "CONVERT": "#0D9488",
+    "EDIT": "#D97706",
+    "SECURITY": "#E11D48",
+    "OCR": "#7C3AED",
+    "ADVANCED": "#0891B2",
+    "MORE": "#64748B",
+}
 
 
 class Sidebar(QFrame):
@@ -53,8 +63,8 @@ class Sidebar(QFrame):
             if heading:
                 navigation_layout.addSpacing(7)
                 label = QLabel(heading)
-                label.setObjectName("muted")
-                label.setContentsMargins(6, 0, 0, 0)
+                label.setStyleSheet(f"color: {SECTION_COLORS[heading]}; font-weight: 700; font-size: 11px; letter-spacing: 1px;")
+                label.setContentsMargins(8, 0, 0, 0)
                 navigation_layout.addWidget(label)
             for key, text in entries:
                 button = QPushButton(text)

@@ -56,10 +56,16 @@ class OrganizerPage(QWidget):
         self.grid.model().rowsAboutToBeMoved.connect(lambda *args: self._checkpoint())
         self.grid.model().rowsMoved.connect(lambda *args: self._renumber())
         toolbar = QHBoxLayout()
-        actions = (("Undo", self.undo), ("Redo", self.redo), ("Reset", self.reset), ("Remove", self.remove_selected), ("Duplicate", self.duplicate_selected), ("↶ 90°", lambda: self.rotate_selected(-90)), ("↷ 90°", lambda: self.rotate_selected(90)), ("Extract", self.extract_selected))
+        actions = [("Undo", self.undo), ("Redo", self.redo), ("Reset", self.reset), ("Remove", self.remove_selected), ("Duplicate", self.duplicate_selected), ("↶ 90°", lambda: self.rotate_selected(-90)), ("↷ 90°", lambda: self.rotate_selected(90)), ("Extract", self.extract_selected)]
         for label, callback in actions:
-            button = QPushButton(label); button.clicked.connect(callback); toolbar.addWidget(button)
-        toolbar.addStretch(); save = QPushButton("Save Organized PDF"); save.setObjectName("primary"); save.clicked.connect(self.save); toolbar.addWidget(save); layout.addLayout(toolbar)
+            btn_id = ""
+            if label == "Remove": btn_id = "danger"
+            elif label in ("Extract",): btn_id = "info"
+            button = QPushButton(label); button.clicked.connect(callback)
+            if btn_id: button.setObjectName(btn_id)
+            else: button.setObjectName("ghost")
+            toolbar.addWidget(button)
+        toolbar.addStretch(); save = QPushButton("Save Organized PDF"); save.setObjectName("success"); save.clicked.connect(self.save); toolbar.addWidget(save); layout.addLayout(toolbar)
 
     def choose(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")

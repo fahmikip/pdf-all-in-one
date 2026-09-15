@@ -48,9 +48,9 @@ class ConverterPage(QWidget):
         title = QLabel("Convert Files"); title.setObjectName("title"); layout.addWidget(title)
         subtitle = QLabel("Convert images to PDF or export PDF pages as images—entirely offline."); subtitle.setObjectName("subtitle"); layout.addWidget(subtitle)
         mode_row = QHBoxLayout(); mode_row.addWidget(QLabel("Conversion")); self.mode = QComboBox(); self.mode.addItems(["Image to PDF", "PDF to JPG", "PDF to PNG", "PDF to WebP", "Word to PDF", "Excel to PDF", "PowerPoint to PDF", "PDF to Word", "PDF to Excel"]); self.mode.currentTextChanged.connect(self.mode_changed); mode_row.addWidget(self.mode, 1)
-        self.locate_office = QPushButton("Locate LibreOffice"); self.locate_office.clicked.connect(self.choose_libreoffice); mode_row.addWidget(self.locate_office); layout.addLayout(mode_row)
+        self.locate_office = QPushButton("Locate LibreOffice"); self.locate_office.setObjectName("ghost"); self.locate_office.clicked.connect(self.choose_libreoffice); mode_row.addWidget(self.locate_office); layout.addLayout(mode_row)
         self.files = ConversionFileList(); self.files.setDragDropMode(QListWidget.DragDropMode.InternalMove); self.files.setMinimumHeight(210); self.files.external_files_dropped.connect(self.add_paths); layout.addWidget(self.files)
-        file_row = QHBoxLayout(); add = QPushButton("Add Files"); add.clicked.connect(self.choose); remove = QPushButton("Remove Selected"); remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow())); clear = QPushButton("Clear"); clear.clicked.connect(self.files.clear)
+        file_row = QHBoxLayout();         add = QPushButton("Add Files"); add.setObjectName("ghost"); add.clicked.connect(self.choose); remove = QPushButton("Remove Selected"); remove.setObjectName("ghost"); remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow())); clear = QPushButton("Clear"); clear.setObjectName("ghost"); clear.clicked.connect(self.files.clear)
         file_row.addWidget(add); file_row.addWidget(remove); file_row.addWidget(clear); file_row.addStretch(); layout.addLayout(file_row)
         settings = QHBoxLayout()
         self.page_size = QComboBox(); self.page_size.addItems(["A4", "Letter", "Legal", "Fit"]); settings.addWidget(QLabel("Page size")); settings.addWidget(self.page_size)
@@ -62,7 +62,7 @@ class ConverterPage(QWidget):
         options.addWidget(QLabel("Quality")); self.quality = QSlider(Qt.Orientation.Horizontal); self.quality.setRange(1, 100); self.quality.setValue(90); self.quality.setMaximumWidth(180); options.addWidget(self.quality); layout.addLayout(options)
         self.progress = QProgressBar(); self.progress.hide(); layout.addWidget(self.progress)
         self.status = QLabel("Add files to begin"); self.status.setObjectName("muted"); layout.addWidget(self.status)
-        process = QPushButton("Convert"); process.setObjectName("primary"); process.clicked.connect(self.start); layout.addWidget(process); layout.addStretch()
+        process = QPushButton("Convert"); process.setObjectName("success"); process.clicked.connect(self.start); layout.addWidget(process); layout.addStretch()
         self.mode_changed(self.mode.currentText())
 
     def mode_changed(self, mode: str) -> None:

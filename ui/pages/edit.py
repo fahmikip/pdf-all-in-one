@@ -19,7 +19,7 @@ class EditPage(QWidget):
         super().__init__(); self.source: Path | None = None; self.worker = None
         layout = QVBoxLayout(self); layout.setContentsMargins(36, 28, 36, 28)
         title = QLabel("Edit PDF"); title.setObjectName("title"); layout.addWidget(title)
-        source_row = QHBoxLayout(); self.source_label = QLabel("No PDF selected"); choose = QPushButton("Choose PDF"); choose.clicked.connect(self.choose_pdf); source_row.addWidget(self.source_label, 1); source_row.addWidget(choose); layout.addLayout(source_row)
+        source_row = QHBoxLayout(); self.source_label = QLabel("No PDF selected");         choose = QPushButton("Choose PDF"); choose.setObjectName("ghost"); choose.clicked.connect(self.choose_pdf); source_row.addWidget(self.source_label, 1); source_row.addWidget(choose); layout.addLayout(source_row)
         self.tabs = QTabWidget(); layout.addWidget(self.tabs, 1)
         self._watermark_tab(); self._numbers_tab(); self._header_tab(); self._metadata_tab(); self._editor_tab()
         self.status = QLabel("All changes are saved to a new file."); self.status.setObjectName("muted"); layout.addWidget(self.status)
@@ -34,31 +34,31 @@ class EditPage(QWidget):
     def _watermark_tab(self) -> None:
         page = QWidget(); form = QFormLayout(page); self.wm_type = QComboBox(); self.wm_type.addItems(["Text", "Image"]); form.addRow("Type", self.wm_type)
         self.wm_content = QLineEdit("CONFIDENTIAL"); form.addRow("Text / image path", self.wm_content)
-        browse = QPushButton("Browse image"); browse.clicked.connect(self.choose_watermark_image); form.addRow("", browse)
+        browse = QPushButton("Browse image"); browse.setObjectName("ghost"); browse.clicked.connect(self.choose_watermark_image); form.addRow("", browse)
         self.wm_position = QComboBox(); self.wm_position.addItems(["center", "top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"]); form.addRow("Position", self.wm_position)
         self.wm_opacity = QSpinBox(); self.wm_opacity.setRange(5, 100); self.wm_opacity.setValue(25); form.addRow("Opacity (%)", self.wm_opacity)
         self.wm_rotation = QComboBox(); self.wm_rotation.addItems(["0", "90", "180", "270"]); form.addRow("Rotation", self.wm_rotation)
         self.wm_pages = QLineEdit(); self.wm_pages.setPlaceholderText("All, or 1-3, 5"); form.addRow("Pages", self.wm_pages)
-        button = QPushButton("Add Watermark"); button.setObjectName("primary"); button.clicked.connect(self.apply_watermark); form.addRow(button); self.tabs.addTab(page, "Watermark")
+        button = QPushButton("Add Watermark"); button.setObjectName("info"); button.clicked.connect(self.apply_watermark); form.addRow(button); self.tabs.addTab(page, "Watermark")
 
     def _numbers_tab(self) -> None:
         page = QWidget(); form = QFormLayout(page); self.number_template = QComboBox(); self.number_template.setEditable(True); self.number_template.addItems(["{page}", "Page {page}", "{page} / {pages}"]); form.addRow("Format", self.number_template)
         self.number_position = QComboBox(); self.number_position.addItems(["bottom-center", "bottom-left", "bottom-right", "top-center", "top-left", "top-right"]); form.addRow("Position", self.number_position)
         self.number_start = QSpinBox(); self.number_start.setRange(0, 999999); self.number_start.setValue(1); form.addRow("Start number", self.number_start)
         self.number_pages = QLineEdit(); self.number_pages.setPlaceholderText("All, or 1-3, 5"); form.addRow("Pages", self.number_pages)
-        button = QPushButton("Add Page Numbers"); button.setObjectName("primary"); button.clicked.connect(self.apply_numbers); form.addRow(button); self.tabs.addTab(page, "Page Numbers")
+        button = QPushButton("Add Page Numbers"); button.setObjectName("info"); button.clicked.connect(self.apply_numbers); form.addRow(button); self.tabs.addTab(page, "Page Numbers")
 
     def _header_tab(self) -> None:
         page = QWidget(); form = QFormLayout(page); self.header_fields = {}
         for key in ("header-left", "header-center", "header-right", "footer-left", "footer-center", "footer-right"):
             edit = QLineEdit(); edit.setPlaceholderText("Supports {page}, {pages}, {date}, {filename}"); self.header_fields[key] = edit; form.addRow(key.replace("-", " ").title(), edit)
-        button = QPushButton("Add Header & Footer"); button.setObjectName("primary"); button.clicked.connect(self.apply_header); form.addRow(button); self.tabs.addTab(page, "Header & Footer")
+        button = QPushButton("Add Header & Footer"); button.setObjectName("info"); button.clicked.connect(self.apply_header); form.addRow(button); self.tabs.addTab(page, "Header & Footer")
 
     def _metadata_tab(self) -> None:
         page = QWidget(); form = QFormLayout(page); self.metadata_fields = {}
         for key in ("title", "author", "subject", "keywords", "creator", "producer"):
             edit = QLineEdit(); self.metadata_fields[key] = edit; form.addRow(key.title(), edit)
-        row = QHBoxLayout(); save = QPushButton("Save Metadata"); save.setObjectName("primary"); save.clicked.connect(lambda: self.apply_metadata(False)); clear = QPushButton("Clear Metadata"); clear.clicked.connect(lambda: self.apply_metadata(True)); row.addWidget(save); row.addWidget(clear); form.addRow(row); self.tabs.addTab(page, "Metadata")
+        row = QHBoxLayout(); save = QPushButton("Save Metadata"); save.setObjectName("success"); save.clicked.connect(lambda: self.apply_metadata(False)); clear = QPushButton("Clear Metadata"); clear.setObjectName("ghost"); clear.clicked.connect(lambda: self.apply_metadata(True)); row.addWidget(save); row.addWidget(clear); form.addRow(row); self.tabs.addTab(page, "Metadata")
 
     def choose_watermark_image(self) -> None:
         name, _ = QFileDialog.getOpenFileName(self, "Choose watermark image", "", "Images (*.png *.jpg *.jpeg *.webp)")
