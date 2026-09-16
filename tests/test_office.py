@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import fitz
+import pymupdf
 import pytest
 from core.office.libreoffice_converter import LibreOfficeUnavailableError, find_libreoffice, office_to_pdf
 from core.office.pdf_to_excel import pdf_to_excel
@@ -18,13 +18,13 @@ def test_pdf_to_word_extracts_text(sample_pdf: Path, tmp_path: Path) -> None:
 
 
 def _content_pdf(path: Path) -> Path:
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=300, height=400)
     page.insert_text((40, 60), "Item")
     page.insert_text((40, 120), "Pen")
     image = Path(path.parent) / "photo.png"
     Image.new("RGB", (80, 60), (200, 40, 40)).save(image)
-    page.insert_image(fitz.Rect(40, 160, 120, 220), filename=str(image))
+    page.insert_image(pymupdf.Rect(40, 160, 120, 220), filename=str(image))
     document.save(path)
     document.close()
     return path
@@ -43,7 +43,7 @@ def test_pdf_to_excel_exports_text_and_images(tmp_path: Path) -> None:
 
 def test_pdf_to_excel_empty_page_raises(sample_pdf: Path, tmp_path: Path) -> None:
     blank = tmp_path / "blank.pdf"
-    document = fitz.open()
+    document = pymupdf.open()
     document.new_page(width=300, height=400)
     document.save(blank)
     document.close()
@@ -106,7 +106,7 @@ def test_office_to_pdf_success(tmp_path: Path, monkeypatch) -> None:
         captured.append(list(command))
         outdir = Path(command[9])
         generated = outdir / f"{Path(command[10]).stem}.pdf"
-        pdf = fitz.open()
+        pdf = pymupdf.open()
         pdf.new_page(width=200, height=200)
         pdf.save(generated)
         pdf.close()
@@ -117,7 +117,7 @@ def test_office_to_pdf_success(tmp_path: Path, monkeypatch) -> None:
     progress: list[tuple[int, str]] = []
     result = office_to_pdf(document, destination, executable=soffice, progress=lambda v, d: progress.append((v, d)))
     assert result == destination.resolve()
-    with fitz.open(destination) as pdf:
+    with pymupdf.open(destination) as pdf:
         assert pdf.page_count == 1
     assert captured and "soffice" in captured[0][0]
     assert progress == [(10, "Starting LibreOffice"), (90, "Finalizing PDF"), (100, destination.name)]
@@ -138,7 +138,7 @@ def test_office_to_pdf_raises_on_subprocess_failure(tmp_path: Path, monkeypatch)
 
 
 def _table_pdf(path: Path) -> Path:
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=400, height=400)
     page.insert_text((40, 40), "Quarterly", fontsize=14, fontname="hebo")
     header = ("Date", "Amount")

@@ -8,7 +8,7 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 from core.pdf.merger import merge_pdfs
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
@@ -125,10 +125,10 @@ def ocr_pdf(
         work = Path(directory)
         generated: list[Path] = []
         text_parts: list[str] = []
-        with fitz.open(info.path) as document:
+        with pymupdf.open(info.path) as document:
             for index, page in enumerate(document):
                 image = work / f"page-{index + 1}.png"
-                page.get_pixmap(matrix=fitz.Matrix(dpi / 72, dpi / 72), colorspace=fitz.csRGB, alpha=False).save(image)
+                page.get_pixmap(matrix=pymupdf.Matrix(dpi / 72, dpi / 72), colorspace=pymupdf.csRGB, alpha=False).save(image)
                 base = work / f"ocr-{index + 1}"
                 result = subprocess.run(
                     _command(tesseract, image, str(base), language, output_format),

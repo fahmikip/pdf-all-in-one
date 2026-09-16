@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 from core.jobs.worker import FunctionWorker
 from core.pdf.page_manager import PageSpec, organize_pages
 from core.utils.validation import validate_pdf
@@ -34,11 +34,11 @@ class OrganizerState:
 
 def render_thumbnails(path: str | Path, progress=None) -> list[QImage]:
     images: list[QImage] = []
-    with fitz.open(path) as document:
+    with pymupdf.open(path) as document:
         total = document.page_count
-        matrix = fitz.Matrix(0.24, 0.24)
+        matrix = pymupdf.Matrix(0.24, 0.24)
         for index, page in enumerate(document):
-            pixmap = page.get_pixmap(matrix=matrix, alpha=False, colorspace=fitz.csRGB)
+            pixmap = page.get_pixmap(matrix=matrix, alpha=False, colorspace=pymupdf.csRGB)
             image = QImage(
                 pixmap.samples, pixmap.width, pixmap.height, pixmap.stride, QImage.Format.Format_RGB888
             ).copy()

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 from core.utils.file_utils import atomic_output
@@ -27,7 +27,7 @@ def extract_text(
     output = Path(destination).expanduser().resolve()
     if output.suffix.lower() != ".txt":
         raise ValueError("Output must use the .txt extension.")
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         buffers: list[str] = []
         for count, index in enumerate(pages, start=1):
             page = document[index]
@@ -63,7 +63,7 @@ def extract_images(
     folder = Path(output_dir).expanduser().resolve()
     folder.mkdir(parents=True, exist_ok=True)
     targets: list[tuple[int, list[tuple]]] = []
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         for index in pages:
             targets.append(
                 (
@@ -83,9 +83,9 @@ def extract_images(
         for index, items in targets:
             for image_info in items:
                 xref = image_info[0]
-                pixmap = fitz.Pixmap(document, xref)
+                pixmap = pymupdf.Pixmap(document, xref)
                 if pixmap.n - pixmap.alpha > 3 or pixmap.colorspace is None:
-                    pixmap = fitz.Pixmap(fitz.csRGB, pixmap)
+                    pixmap = pymupdf.Pixmap(pymupdf.csRGB, pixmap)
                 image = Image.frombytes(
                     "RGBA" if pixmap.alpha else "RGB", (pixmap.width, pixmap.height), pixmap.samples
                 )

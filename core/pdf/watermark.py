@@ -7,7 +7,7 @@ from datetime import date
 from io import BytesIO
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
@@ -21,7 +21,7 @@ def _pages(expression: str, count: int) -> list[int]:
     return parse_page_ranges(expression, count) if expression.strip() else list(range(count))
 
 
-def _point(rect: fitz.Rect, position: str, margin: float, width: float, height: float) -> tuple[float, float]:
+def _point(rect: pymupdf.Rect, position: str, margin: float, width: float, height: float) -> tuple[float, float]:
     horizontal = position.rsplit("-", 1)[-1] if position != "center" else "center"
     vertical = position.split("-", 1)[0] if position != "center" else "center"
     x = (
@@ -60,18 +60,18 @@ def add_text_watermark(
         raise ValueError("Watermark text cannot be empty.")
     if position not in POSITIONS or rotation not in {0, 90, 180, 270}:
         raise ValueError("Invalid watermark position or rotation.")
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         for index in _pages(page_range, info.pages):
             page = document[index]
             width = min(page.rect.width - 2 * margin, max(180, len(text) * font_size * 0.65))
             height = font_size * 2
             x, y = _point(page.rect, position, margin, width, height)
             page.insert_textbox(
-                fitz.Rect(x, y, x + width, y + height),
+                pymupdf.Rect(x, y, x + width, y + height),
                 text,
                 fontsize=font_size,
                 color=(0.35, 0.35, 0.4),
-                align=fitz.TEXT_ALIGN_CENTER,
+                align=pymupdf.TEXT_ALIGN_CENTER,
                 rotate=rotation,
                 fill_opacity=max(0, min(1, opacity)),
                 overlay=True,
@@ -106,14 +106,14 @@ def add_image_watermark(
         rgba.save(stream, "PNG")
         image_bytes = stream.getvalue()
         ratio = rgba.height / rgba.width
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         for index in _pages(page_range, info.pages):
             page = document[index]
             width = page.rect.width * max(0.05, min(0.9, scale))
             height = width * ratio
             x, y = _point(page.rect, position, margin, width, height)
             page.insert_image(
-                fitz.Rect(x, y, x + width, y + height), stream=image_bytes, overlay=True, keep_proportion=True
+                pymupdf.Rect(x, y, x + width, y + height), stream=image_bytes, overlay=True, keep_proportion=True
             )
         with atomic_output(output) as temporary:
             document.save(temporary, garbage=3, deflate=True)
@@ -148,7 +148,7 @@ def place_image(
         image.verify()
     with Image.open(image_source) as image:
         ratio = image.height / image.width
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         selected = _pages(page_range, info.pages)
         for sequence, index in enumerate(selected):
             page = document[index]
@@ -156,7 +156,7 @@ def place_image(
             height = width * ratio
             x, y = _point(page.rect, position, margin, width, height)
             page.insert_image(
-                fitz.Rect(x, y, x + width, y + height), filename=str(image_source), overlay=True, keep_proportion=True
+                pymupdf.Rect(x, y, x + width, y + height), filename=str(image_source), overlay=True, keep_proportion=True
             )
             if progress:
                 progress(round((sequence + 1) / len(selected) * 95), f"Placed image on page {index + 1}")
@@ -174,12 +174,12 @@ def insert_objects(source: str | Path, destination: str | Path, *, page_index: i
     ensure_distinct_paths(info.path, output)
     if not 0 <= page_index < info.pages:
         raise ValueError(f"Page {page_index + 1} does not exist.")
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         page = document[page_index]
         for item in items:
             if "rect" not in item:
                 continue
-            rect = fitz.Rect(*item["rect"])
+            rect = pymupdf.Rect(*item["rect"])
             if rect.width <= 0 or rect.height <= 0:
                 continue
             kind = item.get("type")
@@ -211,7 +211,7 @@ def insert_objects(source: str | Path, destination: str | Path, *, page_index: i
                     "overlay": True,
                 }
                 if "\n" in text:
-                    page.insert_textbox(rect, text, align=fitz.TEXT_ALIGN_LEFT, **kwargs)
+                    page.insert_textbox(rect, text, align=pymupdf.TEXT_ALIGN_LEFT, **kwargs)
                 else:
                     page.insert_text((rect.x0, rect.y0 + rect.height * 0.72), text, **kwargs)
             if progress:
@@ -237,7 +237,7 @@ def add_page_numbers(
     info = validate_pdf(source)
     output = Path(destination).resolve()
     ensure_distinct_paths(info.path, output)
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         selected = _pages(page_range, info.pages)
         for sequence, index in enumerate(selected):
             text = template.format(page=start_number + sequence, pages=len(selected))
@@ -245,10 +245,10 @@ def add_page_numbers(
             width, height = 150, font_size * 1.8
             x, y = _point(page.rect, position, margin, width, height)
             page.insert_textbox(
-                fitz.Rect(x, y, x + width, y + height),
+                pymupdf.Rect(x, y, x + width, y + height),
                 text,
                 fontsize=font_size,
-                align=fitz.TEXT_ALIGN_CENTER,
+                align=pymupdf.TEXT_ALIGN_CENTER,
                 color=(0.15, 0.15, 0.18),
                 overlay=True,
             )
@@ -270,7 +270,7 @@ def add_header_footer(
     output = Path(destination).resolve()
     ensure_distinct_paths(info.path, output)
     valid = {"header-left", "header-center", "header-right", "footer-left", "footer-center", "footer-right"}
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         selected = _pages(page_range, info.pages)
         for index in selected:
             page = document[index]
@@ -291,12 +291,12 @@ def add_header_footer(
                 width, height = 180, font_size * 1.8
                 x, y = _point(page.rect, position, margin, width, height)
                 align = {
-                    "left": fitz.TEXT_ALIGN_LEFT,
-                    "center": fitz.TEXT_ALIGN_CENTER,
-                    "right": fitz.TEXT_ALIGN_RIGHT,
+                    "left": pymupdf.TEXT_ALIGN_LEFT,
+                    "center": pymupdf.TEXT_ALIGN_CENTER,
+                    "right": pymupdf.TEXT_ALIGN_RIGHT,
                 }[horizontal]
                 page.insert_textbox(
-                    fitz.Rect(x, y, x + width, y + height), text, fontsize=font_size, align=align, overlay=True
+                    pymupdf.Rect(x, y, x + width, y + height), text, fontsize=font_size, align=align, overlay=True
                 )
         with atomic_output(output) as temporary:
             document.save(temporary, garbage=3, deflate=True)

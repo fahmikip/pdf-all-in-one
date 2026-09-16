@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
 from core.utils.validation import validate_pdf
@@ -45,7 +45,7 @@ def list_form_fields(source: str | Path) -> list[dict[str, object]]:
     if info.encrypted:
         raise ValueError("Form fields cannot be read from an encrypted PDF. Unlock it first.")
     fields: list[dict[str, object]] = []
-    with fitz.open(info.path) as doc:
+    with pymupdf.open(info.path) as doc:
         for page_number, page in enumerate(doc):
             for widget in page.widgets():
                 name = widget.field_name
@@ -75,7 +75,7 @@ def fill_pdf_form(
         raise ValueError("Fill form output must use .pdf.")
     updates = {name: value for name, value in updates.items() if name}
     errors: list[str] = []
-    with fitz.open(info.path) as doc:
+    with pymupdf.open(info.path) as doc:
         applied = 0
         for page_number, page in enumerate(doc):
             for widget in page.widgets():
@@ -127,12 +127,12 @@ def sign_pdf(
         raise ValueError("Page number must be at least 1.")
     if rect[0] == 0.0 and rect[1] == 0.0 and rect[2] == 0.0 and rect[3] == 0.0:
         raise ValueError("Choose a position for the signature.")
-    with fitz.open(info.path) as doc:
+    with pymupdf.open(info.path) as doc:
         if page_number > doc.page_count:
             raise ValueError(f"The PDF only has {doc.page_count} page(s).")
         page = doc[page_number - 1]
         left, top, right, bottom = rect
-        box = fitz.Rect(left, top, right, bottom)
+        box = pymupdf.Rect(left, top, right, bottom)
         if image is not None:
             page.insert_image(box, filename=str(image))
         if name:

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
@@ -30,7 +30,7 @@ class CompressionResult:
         return self.saved_bytes / self.original_size * 100 if self.original_size else 0.0
 
 
-def _recompress_images(document: fitz.Document, level: str) -> int:
+def _recompress_images(document: pymupdf.Document, level: str) -> int:
     """Replace suitable embedded images with smaller JPEG streams."""
     quality = {"low": 90, "recommended": 75, "high": 55, "maximum": 35}[level]
     processed: set[int] = set()
@@ -61,12 +61,12 @@ def _recompress_images(document: fitz.Document, level: str) -> int:
     return replaced
 
 
-def _raster_compress(document: fitz.Document, dpi: int, quality: int, progress=None) -> fitz.Document:
+def _raster_compress(document: pymupdf.Document, dpi: int, quality: int, progress=None) -> pymupdf.Document:
     """Create a smaller image-only document for explicit aggressive mode."""
-    result = fitz.open()
-    matrix = fitz.Matrix(dpi / 72, dpi / 72)
+    result = pymupdf.open()
+    matrix = pymupdf.Matrix(dpi / 72, dpi / 72)
     for index, page in enumerate(document):
-        pixmap = page.get_pixmap(matrix=matrix, colorspace=fitz.csRGB, alpha=False)
+        pixmap = page.get_pixmap(matrix=matrix, colorspace=pymupdf.csRGB, alpha=False)
         image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
         buffer = BytesIO()
         image.save(buffer, "JPEG", quality=quality, optimize=True, progressive=True)
@@ -94,7 +94,7 @@ def compress_pdf(
     output = Path(destination).expanduser().resolve()
     ensure_distinct_paths(info.path, output)
     garbage = {"low": 1, "recommended": 3, "high": 4, "maximum": 4}[level]
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         if clean_metadata:
             document.set_metadata({})
         if aggressive:
@@ -113,7 +113,7 @@ def compress_pdf(
                         target.save(candidate, garbage=4, deflate=True, deflate_images=True)
                     finally:
                         target.close()
-                    with fitz.open(candidate) as check:
+                    with pymupdf.open(candidate) as check:
                         if check.page_count == info.pages:
                             candidates.append(candidate)
                     if progress:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 
-import fitz
+import pymupdf
 from docx import Document
 from docx.shared import Inches, Pt
 
@@ -92,7 +92,7 @@ def pdf_to_word(source: str | Path, destination: str | Path, *, include_images: 
     word = Document()
     word.core_properties.title = info.path.stem
     total = 0
-    with fitz.open(info.path) as pdf:
+    with pymupdf.open(info.path) as pdf:
         for page_index, page in enumerate(pdf):
             total += 1
             bands = _page_bands(page)

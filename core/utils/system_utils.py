@@ -19,7 +19,7 @@ def dependency_status() -> dict[str, str]:
         "Tesseract OCR": [shutil.which("tesseract"), r"C:\Program Files\Tesseract-OCR\tesseract.exe"],
     }
     result = {
-        "PyMuPDF": "Installed" if importlib.util.find_spec("fitz") else "Not Found",
+        "PyMuPDF": "Installed" if importlib.util.find_spec("pymupdf") or importlib.util.find_spec("fitz") else "Not Found",
         "pikepdf": "Installed" if importlib.util.find_spec("pikepdf") else "Not Found",
     }
     for name, paths in candidates.items():

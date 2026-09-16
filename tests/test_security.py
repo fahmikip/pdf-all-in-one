@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import fitz
+import pymupdf
 import pytest
 from core.pdf.security import password_strength, protect_pdf, unlock_pdf
 from core.utils.validation import ValidationError, validate_pdf
@@ -16,7 +16,7 @@ def test_protect_and_unlock_pdf(sample_pdf: Path, tmp_path: Path) -> None:
     unlocked = unlock_pdf(protected, tmp_path / "unlocked.pdf", "Strong-Pass-42")
     info = validate_pdf(unlocked)
     assert info.pages == 3 and not info.encrypted
-    with fitz.open(unlocked) as document:
+    with pymupdf.open(unlocked) as document:
         assert "Page 1" in document[0].get_text()
 
 

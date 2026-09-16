@@ -6,7 +6,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
 from core.utils.validation import validate_pdf
@@ -30,7 +30,7 @@ def organize_pages(source: str | Path, destination: str | Path, pages: Sequence[
     _validate_indices((page.source_index for page in pages), info.pages)
     if any(page.rotation % 90 for page in pages):
         raise ValueError("Page rotations must be multiples of 90 degrees.")
-    with fitz.open(info.path) as document, fitz.open() as result:
+    with pymupdf.open(info.path) as document, pymupdf.open() as result:
         for specification in pages:
             result.insert_pdf(document, from_page=specification.source_index, to_page=specification.source_index)
             output_page = result[-1]
@@ -55,7 +55,7 @@ def reorder_pages(source: str | Path, destination: str | Path, order: Sequence[i
     indices = _validate_indices(order, info.pages)
     if not indices:
         raise ValueError("The output PDF must contain at least one page.")
-    with fitz.open(info.path) as document, fitz.open() as result:
+    with pymupdf.open(info.path) as document, pymupdf.open() as result:
         for index in indices:
             result.insert_pdf(document, from_page=index, to_page=index)
         with atomic_output(output) as temporary:
@@ -81,7 +81,7 @@ def rotate_pages(source: str | Path, destination: str | Path, pages: Iterable[in
     selected = set(_validate_indices(pages, info.pages))
     if not selected:
         raise ValueError("Select at least one page to rotate.")
-    with fitz.open(info.path) as document:
+    with pymupdf.open(info.path) as document:
         for index in selected:
             page = document[index]
             page.set_rotation((page.rotation + degrees) % 360)

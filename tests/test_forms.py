@@ -1,22 +1,22 @@
 from pathlib import Path
 
-import fitz
+import pymupdf
 import pytest
 from core.pdf.forms import fill_pdf_form, list_form_fields, sign_pdf
 
 
 def _form_pdf(path: Path) -> Path:
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=300, height=400)
-    entry = fitz.Widget()
-    entry.rect = fitz.Rect(50, 50, 200, 80)
+    entry = pymupdf.Widget()
+    entry.rect = pymupdf.Rect(50, 50, 200, 80)
     entry.field_name = "Name"
-    entry.field_type = fitz.PDF_WIDGET_TYPE_TEXT
+    entry.field_type = pymupdf.PDF_WIDGET_TYPE_TEXT
     page.add_widget(entry)
-    entry = fitz.Widget()
-    entry.rect = fitz.Rect(50, 100, 200, 115)
+    entry = pymupdf.Widget()
+    entry.rect = pymupdf.Rect(50, 100, 200, 115)
     entry.field_name = "Agree"
-    entry.field_type = fitz.PDF_WIDGET_TYPE_CHECKBOX
+    entry.field_type = pymupdf.PDF_WIDGET_TYPE_CHECKBOX
     entry.button_name = "Agree"
     page.add_widget(entry)
     document.save(path)
@@ -43,7 +43,7 @@ def test_fill_pdf_form_sets_values(tmp_path: Path) -> None:
     pdf = _form_pdf(tmp_path / "form.pdf")
     output = fill_pdf_form(pdf, tmp_path / "filled.pdf", {"Name": "Budi", "Agree": True})
     assert output.exists() and output.stat().st_size > 0
-    with fitz.open(output) as doc:
+    with pymupdf.open(output) as doc:
         values = {widget.field_name: widget.field_value for widget in doc[0].widgets()}
     assert values["Name"] == "Budi" and values["Agree"] == "Yes"
 
@@ -72,7 +72,7 @@ def test_sign_pdf_overlays_image_and_name(tmp_path: Path) -> None:
         role="Manager",
     )
     assert output.exists() and output.stat().st_size > 0
-    with fitz.open(output) as doc:
+    with pymupdf.open(output) as doc:
         _drawings = list(doc[0].get_drawings())
         images = doc[0].get_images(full=True)
         text = doc[0].get_text()

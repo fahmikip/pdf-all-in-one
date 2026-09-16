@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import fitz
+import pymupdf
 from core.pdf.converter import images_to_pdf, pdf_to_images
 from PIL import Image
 
@@ -12,7 +12,7 @@ def test_images_to_pdf_and_back(tmp_path: Path) -> None:
         Image.new("RGB", (320 + index * 40, 240), (30, 100 + index * 50, 180)).save(path)
         images.append(path)
     pdf = images_to_pdf(images, tmp_path / "images.pdf", page_size="a4", orientation="auto", margin="small")
-    with fitz.open(pdf) as document:
+    with pymupdf.open(pdf) as document:
         assert document.page_count == 2
     outputs = pdf_to_images(pdf, tmp_path / "exports", image_format="webp", dpi=96, page_range="2")
     assert len(outputs) == 1

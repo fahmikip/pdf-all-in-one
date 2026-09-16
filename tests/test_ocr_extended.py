@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import fitz
+import pymupdf
 import pytest
 from core.ocr.ocr_engine import OcrUnavailableError, available_languages, find_tesseract, ocr_image, ocr_pdf
 
@@ -32,9 +32,9 @@ class FakeRun:
             return result
         output_format = command[-1]
         if output_format == "pdf":
-            document = fitz.open()
+            document = pymupdf.open()
             page = document.new_page()
-            page.insert_image(fitz.Rect(0, 0, page.rect.width, page.rect.height), filename=str(command[1]))
+            page.insert_image(pymupdf.Rect(0, 0, page.rect.width, page.rect.height), filename=str(command[1]))
             document.save(str(Path(command[2]).with_suffix(".pdf")))
             document.close()
         else:
@@ -113,7 +113,7 @@ def test_ocr_image_writes_pdf_with_pdf_format(fake_tesseract, tmp_path: Path) ->
     destination = tmp_path / "out.pdf"
     result = ocr_image(source, destination, output_format="pdf", executable=executable)
     assert result == destination.resolve()
-    with fitz.open(destination) as document:
+    with pymupdf.open(destination) as document:
         assert document.page_count == 1
 
 
@@ -161,14 +161,14 @@ def test_ocr_pdf_txt_rejects_non_txt_destination(fake_tesseract, sample_pdf: Pat
 
 def test_ocr_pdf_pdf_single_page(fake_tesseract, tmp_path: Path) -> None:
     one_page = tmp_path / "one.pdf"
-    document = fitz.open()
+    document = pymupdf.open()
     document.new_page(width=300, height=400)
     document.save(one_page)
     document.close()
     destination = tmp_path / "out.pdf"
     result = ocr_pdf(one_page, destination, executable=fake_tesseract[0])
     assert result == destination.resolve()
-    with fitz.open(destination) as merged:
+    with pymupdf.open(destination) as merged:
         assert merged.page_count == 1
 
 
@@ -176,7 +176,7 @@ def test_ocr_pdf_pdf_multi_page_merges(fake_tesseract, sample_pdf: Path, tmp_pat
     destination = tmp_path / "merged.pdf"
     result = ocr_pdf(sample_pdf, destination, executable=fake_tesseract[0])
     assert result == destination.resolve()
-    with fitz.open(destination) as merged:
+    with pymupdf.open(destination) as merged:
         assert merged.page_count == 3
 
 

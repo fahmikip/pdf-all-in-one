@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import fitz
+import pymupdf
 from core.jobs.worker import FunctionWorker
 from core.pdf.forms import fill_pdf_form, list_form_fields, sign_pdf
 from core.utils.history import HistoryStore
@@ -145,7 +145,7 @@ class FormsPage(QWidget):
             return
         self.source = info.path
         self.source_label.setText(f"{info.path.name} · {info.pages} pages")
-        with fitz.open(self.source) as doc:
+        with pymupdf.open(self.source) as doc:
             self.page_size = (doc[0].rect.width, doc[0].rect.height) if doc.page_count else (595.0, 842.0)
         self.page.setMaximum(info.pages)
         self.load_fields()

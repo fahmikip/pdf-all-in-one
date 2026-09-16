@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
 from core.utils.validation import parse_page_ranges, validate_pdf
@@ -20,7 +20,7 @@ def extract_pages(source: str | Path, destination: str | Path, pages: Iterable[i
         raise ValueError("Select at least one page to extract.")
     if any(index < 0 or index >= info.pages for index in indices):
         raise ValueError("One or more selected pages are outside the document.")
-    with fitz.open(info.path) as document, fitz.open() as extracted:
+    with pymupdf.open(info.path) as document, pymupdf.open() as extracted:
         for index in indices:
             extracted.insert_pdf(document, from_page=index, to_page=index)
         with atomic_output(output) as temporary:

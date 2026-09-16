@@ -6,7 +6,7 @@ from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 
-import fitz
+import pymupdf
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image as XlImage
 from openpyxl.styles import Alignment
@@ -99,7 +99,7 @@ def pdf_to_excel(
     workbook = Workbook()
     workbook.remove(workbook.active)
     created = 0
-    with fitz.open(info.path) as pdf:
+    with pymupdf.open(info.path) as pdf:
         for page_index, page in enumerate(pdf):
             bands = _page_bands(page)
             if not bands:

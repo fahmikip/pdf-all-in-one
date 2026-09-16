@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 
 class ValidationError(ValueError):
@@ -27,7 +27,7 @@ def validate_pdf(path: str | Path, *, password: str | None = None, allow_encrypt
     if source.suffix.lower() != ".pdf":
         raise ValidationError("Please select a PDF file.")
     try:
-        with fitz.open(source) as document:
+        with pymupdf.open(source) as document:
             encrypted = bool(document.needs_pass)
             if encrypted and password and not document.authenticate(password):
                 raise ValidationError("The PDF password is incorrect.")
@@ -38,7 +38,7 @@ def validate_pdf(path: str | Path, *, password: str | None = None, allow_encrypt
                 raise ValidationError("The PDF does not contain any pages.")
     except ValidationError:
         raise
-    except (fitz.FileDataError, RuntimeError) as exc:
+    except (pymupdf.FileDataError, RuntimeError) as exc:
         raise ValidationError("The PDF is damaged or cannot be read.") from exc
     return PdfInfo(source, source.stat().st_size, pages, encrypted)
 

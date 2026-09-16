@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 
 from core.utils.file_utils import atomic_output
@@ -59,7 +59,7 @@ def images_to_pdf(
     margin_points = custom_margin if margin == "custom" else MARGINS.get(margin)
     if margin_points is None or margin_points < 0:
         raise ValueError("Margin must be zero or greater.")
-    document = fitz.open()
+    document = pymupdf.open()
     try:
         for index, image_path in enumerate(images):
             with Image.open(image_path) as image:
@@ -72,13 +72,13 @@ def images_to_pdf(
                 if (landscape and width < height) or (not landscape and width > height):
                     width, height = height, width
             page = document.new_page(width=width, height=height)
-            available = fitz.Rect(margin_points, margin_points, width - margin_points, height - margin_points)
+            available = pymupdf.Rect(margin_points, margin_points, width - margin_points, height - margin_points)
             scale = min(available.width / width_px, available.height / height_px)
             draw_width, draw_height = width_px * scale, height_px * scale
             left = (width - draw_width) / 2
             top = (height - draw_height) / 2
             page.insert_image(
-                fitz.Rect(left, top, left + draw_width, top + draw_height),
+                pymupdf.Rect(left, top, left + draw_width, top + draw_height),
                 filename=str(image_path),
                 keep_proportion=True,
             )
@@ -116,11 +116,11 @@ def pdf_to_images(
     folder = Path(output_dir).expanduser().resolve()
     folder.mkdir(parents=True, exist_ok=True)
     outputs: list[Path] = []
-    matrix = fitz.Matrix(dpi / 72, dpi / 72)
-    with fitz.open(info.path) as document:
+    matrix = pymupdf.Matrix(dpi / 72, dpi / 72)
+    with pymupdf.open(info.path) as document:
         for count, index in enumerate(pages, start=1):
             pixmap = document[index].get_pixmap(
-                matrix=matrix, alpha=transparent and image_format in {"png", "webp"}, colorspace=fitz.csRGB
+                matrix=matrix, alpha=transparent and image_format in {"png", "webp"}, colorspace=pymupdf.csRGB
             )
             mode = "RGBA" if pixmap.alpha else "RGB"
             image = Image.frombytes(mode, (pixmap.width, pixmap.height), pixmap.samples)

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import fitz
+import pymupdf
 from core.pdf.extractor import extract_images, extract_text
 from core.utils.validation import ValidationError
 from PIL import Image
@@ -38,11 +38,11 @@ def test_extract_text_rejects_non_txt(sample_pdf: Path, tmp_path: Path) -> None:
 
 def test_extract_images(tmp_path: Path) -> None:
     pdf = tmp_path / "images.pdf"
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=300, height=400)
     image_path = tmp_path / "photo.png"
     Image.new("RGB", (200, 150), (10, 80, 160)).save(image_path)
-    page.insert_image(fitz.Rect(50, 50, 250, 200), filename=str(image_path))
+    page.insert_image(pymupdf.Rect(50, 50, 250, 200), filename=str(image_path))
     document.save(pdf)
     document.close()
 
@@ -55,11 +55,11 @@ def test_extract_images(tmp_path: Path) -> None:
 
 def test_extract_images_jpg(tmp_path: Path) -> None:
     pdf = tmp_path / "images.pdf"
-    document = fitz.open()
+    document = pymupdf.open()
     page = document.new_page(width=300, height=400)
     image_path = tmp_path / "photo.png"
     Image.new("RGB", (120, 90), (200, 40, 40)).save(image_path)
-    page.insert_image(fitz.Rect(40, 40, 160, 130), filename=str(image_path))
+    page.insert_image(pymupdf.Rect(40, 40, 160, 130), filename=str(image_path))
     document.save(pdf)
     document.close()
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 from core.utils.file_utils import atomic_output
 from core.utils.validation import validate_pdf
@@ -22,10 +22,10 @@ def merge_pdfs(sources: Sequence[str | Path], destination: str | Path, progress:
         raise ValueError("Merge output must use the .pdf extension.")
     if output in {info.path for info in infos}:
         raise ValueError("Output must not replace an input PDF.")
-    merged = fitz.open()
+    merged = pymupdf.open()
     try:
         for index, info in enumerate(infos, start=1):
-            with fitz.open(info.path) as document:
+            with pymupdf.open(info.path) as document:
                 merged.insert_pdf(document)
             if progress:
                 progress(round(index / len(infos) * 90), info.path.name)

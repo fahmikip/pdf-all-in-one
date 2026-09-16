@@ -4,7 +4,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from pathlib import Path
 
-import fitz
+import pymupdf
 from core.pdf.watermark import insert_objects
 from PIL import Image
 from PySide6.QtGui import QColor, QPixmap
@@ -22,7 +22,7 @@ def test_editor_tab_exists(sample_pdf: Path) -> None:
 def test_editor_export_and_place_roundtrip(sample_pdf: Path, tmp_path: Path) -> None:
     _app = QApplication.instance() or QApplication([])
     editor = EditorPage()
-    with fitz.open(sample_pdf) as document:
+    with pymupdf.open(sample_pdf) as document:
         editor.zoom = max(1.0, min(2.5, 860 / document[0].rect.width))
     editor.source = sample_pdf
     editor._page_index = 0
@@ -45,6 +45,6 @@ def test_editor_export_and_place_roundtrip(sample_pdf: Path, tmp_path: Path) -> 
     assert text_item["color"] == [255, 34, 34]
 
     output = insert_objects(sample_pdf, tmp_path / "editor.pdf", page_index=0, items=items)
-    with fitz.open(output) as document:
+    with pymupdf.open(output) as document:
         assert len(document[0].get_images()) >= 1
         assert "Teks Editor" in document[0].get_text()
