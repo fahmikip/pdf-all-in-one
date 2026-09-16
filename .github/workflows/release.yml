@@ -45,7 +45,8 @@ jobs:
         run: choco install innosetup --yes --no-progress
 
       - name: Build installer
-        run: "& 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' installer\setup.iss"
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
 
       - name: Find installer output
         shell: pwsh
