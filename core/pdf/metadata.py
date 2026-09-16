@@ -1,8 +1,9 @@
 """Read and safely update standard PDF metadata."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 import fitz
 
@@ -19,7 +20,9 @@ def read_metadata(source: str | Path) -> dict[str, str]:
     return {field: metadata.get(field, "") for field in FIELDS}
 
 
-def write_metadata(source: str | Path, destination: str | Path, values: Mapping[str, str], clear: bool = False) -> Path:
+def write_metadata(
+    source: str | Path, destination: str | Path, values: Mapping[str, str], clear: bool = False
+) -> Path:
     info = validate_pdf(source)
     output = Path(destination).expanduser().resolve()
     ensure_distinct_paths(info.path, output)

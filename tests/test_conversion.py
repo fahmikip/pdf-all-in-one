@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import fitz
-from PIL import Image
-
 from core.pdf.converter import images_to_pdf, pdf_to_images
+from PIL import Image
 
 
 def test_images_to_pdf_and_back(tmp_path: Path) -> None:

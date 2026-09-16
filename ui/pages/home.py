@@ -1,12 +1,13 @@
 """Home dashboard."""
+
 from __future__ import annotations
 
+from core.utils.history import HistoryStore
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
-from ui.widgets.drop_zone import DropZone
 from ui.icons import colored_icon
-from core.utils.history import HistoryStore
+from ui.widgets.drop_zone import DropZone
 
 
 class HomePage(QScrollArea):
@@ -47,15 +48,17 @@ class HomePage(QScrollArea):
             card.setProperty("accent", accent)
             card_layout = QVBoxLayout(card)
             header = QHBoxLayout()
-            glyph = QLabel(); glyph.setPixmap(colored_icon(key, color, 21).pixmap(21, 21)); header.addWidget(glyph)
+            glyph = QLabel()
+            glyph.setPixmap(colored_icon(key, color, 21).pixmap(21, 21))
+            header.addWidget(glyph)
             label = QLabel(name)
             label.setObjectName("section")
-            header.addWidget(label, 1); card_layout.addLayout(header)
+            header.addWidget(label, 1)
+            card_layout.addLayout(header)
             detail = QLabel(description)
             detail.setObjectName("muted")
             card_layout.addWidget(detail)
             btn_color = ["#4F46E5", "#059669", "#D97706", "#0891B2", "#7C3AED", "#E11D48", "#0D9488"][index % 7]
-            darkness = sum(int(btn_color[i:i+2], 16) for i in (1, 3, 5))
             button = QPushButton(f"Open {name}  →")
             button.setObjectName("cardAction")
             button.setStyleSheet(
@@ -70,7 +73,13 @@ class HomePage(QScrollArea):
         layout.addWidget(self.drop_zone)
         stats = QGridLayout()
         self.stat_values = []
-        for index, (value, label, accent) in enumerate((("0", "Total PDF Processed", "indigo"), ("0 MB", "Storage Saved", "emerald"), ("—", "Recent Files", "cyan"))):
+        for index, (value, label, accent) in enumerate(
+            (
+                ("0", "Total PDF Processed", "indigo"),
+                ("0 MB", "Storage Saved", "emerald"),
+                ("—", "Recent Files", "cyan"),
+            )
+        ):
             card = QFrame()
             card.setObjectName("statCard")
             card.setProperty("accent", accent)
@@ -87,8 +96,12 @@ class HomePage(QScrollArea):
         self.refresh_stats()
 
     def showEvent(self, event) -> None:
-        self.refresh_stats(); super().showEvent(event)
+        self.refresh_stats()
+        super().showEvent(event)
 
     def refresh_stats(self) -> None:
-        count, saved = HistoryStore().stats(); entries = HistoryStore().load()
-        self.stat_values[0].setText(str(count)); self.stat_values[1].setText(f"{saved / 1048576:.2f} MB"); self.stat_values[2].setText(entries[0].filename if entries else "—")
+        count, saved = HistoryStore().stats()
+        entries = HistoryStore().load()
+        self.stat_values[0].setText(str(count))
+        self.stat_values[1].setText(f"{saved / 1048576:.2f} MB")
+        self.stat_values[2].setText(entries[0].filename if entries else "—")

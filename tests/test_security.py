@@ -2,13 +2,14 @@ from pathlib import Path
 
 import fitz
 import pytest
-
 from core.pdf.security import password_strength, protect_pdf, unlock_pdf
 from core.utils.validation import ValidationError, validate_pdf
 
 
 def test_protect_and_unlock_pdf(sample_pdf: Path, tmp_path: Path) -> None:
-    protected = protect_pdf(sample_pdf, tmp_path / "protected.pdf", "Strong-Pass-42", allow_copying=False, allow_editing=False)
+    protected = protect_pdf(
+        sample_pdf, tmp_path / "protected.pdf", "Strong-Pass-42", allow_copying=False, allow_editing=False
+    )
     assert validate_pdf(protected, allow_encrypted=True).encrypted
     with pytest.raises(ValidationError):
         validate_pdf(protected)

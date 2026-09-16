@@ -1,11 +1,11 @@
 """Permanent developer identity footer."""
+
 from __future__ import annotations
 
+from app.config import DEVELOPER, GITHUB_URL, VERSION
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QStatusBar
-
-from app.config import DEVELOPER, GITHUB_URL, VERSION
 
 
 class Footer(QStatusBar):

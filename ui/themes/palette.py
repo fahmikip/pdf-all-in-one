@@ -1,4 +1,5 @@
 """Modern light/dark Qt stylesheets with colorful, semantic controls."""
+
 from __future__ import annotations
 
 from PySide6.QtGui import QGuiApplication
@@ -12,9 +13,25 @@ def _system_is_dark() -> bool:
 def stylesheet_for(theme: str) -> str:
     dark = theme == "dark" or (theme == "system" and _system_is_dark())
     if dark:
-        bg, surface, card, text, muted, border, hover = "#0B0F19", "#111827", "#182235", "#F8FAFC", "#94A3B8", "#263449", "#22304A"
+        bg, surface, card, text, muted, border, hover = (
+            "#0B0F19",
+            "#111827",
+            "#182235",
+            "#F8FAFC",
+            "#94A3B8",
+            "#263449",
+            "#22304A",
+        )
     else:
-        bg, surface, card, text, muted, border, hover = "#F5F7FB", "#FFFFFF", "#FFFFFF", "#172033", "#64748B", "#E2E8F0", "#EEF2FF"
+        bg, surface, card, text, muted, border, hover = (
+            "#F5F7FB",
+            "#FFFFFF",
+            "#FFFFFF",
+            "#172033",
+            "#64748B",
+            "#E2E8F0",
+            "#EEF2FF",
+        )
 
     brand = "#6366F1"
     accent_box = {
@@ -45,8 +62,9 @@ def stylesheet_for(theme: str) -> str:
     )
 
     drop_gradient = (
-        "stop:0 #102D36, stop:0.5 #182235, stop:1 #0F2E2A" if dark else
-        "stop:0 #EEF2FF, stop:0.5 #FFFFFF, stop:1 #F0FDFA"
+        "stop:0 #102D36, stop:0.5 #182235, stop:1 #0F2E2A"
+        if dark
+        else "stop:0 #EEF2FF, stop:0.5 #FFFFFF, stop:1 #F0FDFA"
     )
     drop_text_color = "#94A3B8" if dark else "#4F46E5"
 

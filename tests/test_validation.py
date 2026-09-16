@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from core.utils.validation import ValidationError, parse_page_ranges, validate_pdf
 
 

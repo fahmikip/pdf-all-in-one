@@ -1,4 +1,5 @@
 """Font discovery and file resolution for embedding text in exported PDFs."""
+
 from __future__ import annotations
 
 from pathlib import Path

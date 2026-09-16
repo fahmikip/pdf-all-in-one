@@ -2,13 +2,12 @@ from pathlib import Path
 
 import fitz
 import pytest
-from PIL import Image
-
 from core.pdf.compressor import compress_pdf
 from core.pdf.merger import merge_pdfs
 from core.pdf.metadata import read_metadata, write_metadata
 from core.pdf.page_manager import PageSpec, organize_pages, remove_pages, reorder_pages, rotate_pages
 from core.pdf.splitter import extract_range, split_every_n
+from PIL import Image
 
 
 def page_text(path: Path) -> list[str]:
@@ -74,7 +73,13 @@ def test_aggressive_compression_produces_valid_smaller_pdf(tmp_path: Path) -> No
         page.insert_image(page.rect, filename=str(bitmap))
         document.save(source)
     progress: list[int] = []
-    result = compress_pdf(source, tmp_path / "aggressive.pdf", "maximum", aggressive=True, progress=lambda value, detail: progress.append(value))
+    result = compress_pdf(
+        source,
+        tmp_path / "aggressive.pdf",
+        "maximum",
+        aggressive=True,
+        progress=lambda value, detail: progress.append(value),
+    )
     assert result.compressed_size < result.original_size
     assert progress[-1] == 100
     with fitz.open(result.output) as document:
@@ -82,10 +87,13 @@ def test_aggressive_compression_produces_valid_smaller_pdf(tmp_path: Path) -> No
 
 
 def test_aggressive_compression_selects_smallest_valid_profile(tmp_path: Path) -> None:
-    source = tmp_path / "scan_profiles.pdf"; bitmap = tmp_path / "scan_profiles.jpg"
+    source = tmp_path / "scan_profiles.pdf"
+    bitmap = tmp_path / "scan_profiles.jpg"
     Image.effect_noise((1800, 2200), 85).convert("RGB").save(bitmap, quality=94)
     with fitz.open() as document:
-        page = document.new_page(width=595, height=842); page.insert_image(page.rect, filename=str(bitmap)); document.save(source)
+        page = document.new_page(width=595, height=842)
+        page.insert_image(page.rect, filename=str(bitmap))
+        document.save(source)
     maximum = compress_pdf(source, tmp_path / "maximum.pdf", "maximum", aggressive=True)
     low = compress_pdf(source, tmp_path / "low.pdf", "low", aggressive=True)
     assert maximum.compressed_size < low.compressed_size < maximum.original_size

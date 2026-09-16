@@ -1,4 +1,5 @@
 """Accessible drag-and-drop file target with colorful design."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,6 +7,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
+
 from ui.icons import icon as app_icon
 
 
@@ -19,11 +21,7 @@ class DropZone(QFrame):
         self.setObjectName("dropZone")
         self.setAcceptDrops(True)
         self.setMinimumHeight(185)
-        self.setStyleSheet(
-            "QFrame#dropZone:hover {"
-            "  border-color: #4F46E5; border-width: 2.5px;"
-            "}"
-        )
+        self.setStyleSheet("QFrame#dropZone:hover {  border-color: #4F46E5; border-width: 2.5px;}")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(30, 28, 30, 28)
         layout.setSpacing(8)
@@ -59,11 +57,15 @@ class DropZone(QFrame):
         layout.addWidget(choose, alignment=Qt.AlignmentFlag.AlignHCenter)
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasUrls() and any(Path(url.toLocalFile()).suffix.lower() == ".pdf" for url in event.mimeData().urls()):
+        if event.mimeData().hasUrls() and any(
+            Path(url.toLocalFile()).suffix.lower() == ".pdf" for url in event.mimeData().urls()
+        ):
             event.acceptProposedAction()
 
     def dropEvent(self, event: QDropEvent) -> None:
-        files = [url.toLocalFile() for url in event.mimeData().urls() if Path(url.toLocalFile()).suffix.lower() == ".pdf"]
+        files = [
+            url.toLocalFile() for url in event.mimeData().urls() if Path(url.toLocalFile()).suffix.lower() == ".pdf"
+        ]
         if files:
             self.files_dropped.emit(files if self.multiple else files[:1])
             event.acceptProposedAction()

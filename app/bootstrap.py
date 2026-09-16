@@ -1,19 +1,19 @@
 """Application bootstrap and global error handling."""
+
 from __future__ import annotations
 
 import logging
 import sys
 import traceback
-from collections.abc import Callable
 
+from core.utils.logger import configure_logging
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
-
-from app.config import APP_NAME, ConfigStore, Settings, VERSION
-from core.utils.logger import configure_logging
-from ui.main_window import MainWindow
 from ui.icons import icon
+from ui.main_window import MainWindow
 from ui.themes.palette import stylesheet_for
+
+from app.config import APP_NAME, VERSION, ConfigStore
 
 
 def install_exception_handler() -> None:
@@ -21,9 +21,12 @@ def install_exception_handler() -> None:
         details = "".join(traceback.format_exception(exc_type, exc, tb))
         logging.getLogger(__name__).critical("Unhandled exception", exc_info=(exc_type, exc, tb))
         dialog = QMessageBox(QMessageBox.Icon.Critical, "Something went wrong", str(exc))
-        dialog.setInformativeText("PDF Master encountered an unexpected problem. Your original files were not changed.")
+        dialog.setInformativeText(
+            "PDF Master encountered an unexpected problem. Your original files were not changed."
+        )
         dialog.setDetailedText(details)
         dialog.exec()
+
     sys.excepthook = handle
 
 

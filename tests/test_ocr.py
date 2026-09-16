@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from core.ocr.ocr_engine import OcrUnavailableError, available_languages, find_tesseract, ocr_image
 
 

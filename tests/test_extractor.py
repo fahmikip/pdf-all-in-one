@@ -1,10 +1,9 @@
 from pathlib import Path
 
 import fitz
-from PIL import Image
-
 from core.pdf.extractor import extract_images, extract_text
 from core.utils.validation import ValidationError
+from PIL import Image
 
 
 def test_extract_text_all_pages(sample_pdf: Path, tmp_path: Path) -> None:

@@ -1,11 +1,12 @@
 """Lossless PDF compression with measurable results."""
+
 from __future__ import annotations
 
+import shutil
+import tempfile
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-import shutil
-import tempfile
 
 import fitz
 from PIL import Image
@@ -72,14 +73,20 @@ def _raster_compress(document: fitz.Document, dpi: int, quality: int, progress=N
         output_page = result.new_page(width=page.rect.width, height=page.rect.height)
         output_page.insert_image(output_page.rect, stream=buffer.getvalue())
         if progress:
-            progress(round((index + 1) / document.page_count * 90), f"Rasterizing page {index + 1} of {document.page_count}")
+            progress(
+                round((index + 1) / document.page_count * 90), f"Rasterizing page {index + 1} of {document.page_count}"
+            )
     result.set_metadata(document.metadata or {})
     return result
 
 
 def compress_pdf(
-    source: str | Path, destination: str | Path, level: str = "recommended",
-    clean_metadata: bool = False, aggressive: bool = False, progress=None,
+    source: str | Path,
+    destination: str | Path,
+    level: str = "recommended",
+    clean_metadata: bool = False,
+    aggressive: bool = False,
+    progress=None,
 ) -> CompressionResult:
     if level not in {"low", "recommended", "high", "maximum"}:
         raise ValueError("Unknown compression level.")
@@ -92,7 +99,8 @@ def compress_pdf(
             document.set_metadata({})
         if aggressive:
             profiles = {
-                "low": [(150, 72)], "recommended": [(135, 62), (120, 55)],
+                "low": [(150, 72)],
+                "recommended": [(135, 62), (120, 55)],
                 "high": [(120, 55), (105, 45), (96, 38)],
                 "maximum": [(110, 48), (96, 38), (82, 30)],
             }[level]
@@ -101,19 +109,34 @@ def compress_pdf(
                 for profile_index, (dpi, quality) in enumerate(profiles, start=1):
                     target = _raster_compress(document, dpi, quality, progress)
                     candidate = Path(work) / f"profile-{profile_index}.pdf"
-                    try: target.save(candidate, garbage=4, deflate=True, deflate_images=True)
-                    finally: target.close()
+                    try:
+                        target.save(candidate, garbage=4, deflate=True, deflate_images=True)
+                    finally:
+                        target.close()
                     with fitz.open(candidate) as check:
-                        if check.page_count == info.pages: candidates.append(candidate)
-                    if progress: progress(min(95, round(profile_index / len(profiles) * 95)), f"Comparing compression profile {profile_index} of {len(profiles)}")
+                        if check.page_count == info.pages:
+                            candidates.append(candidate)
+                    if progress:
+                        progress(
+                            min(95, round(profile_index / len(profiles) * 95)),
+                            f"Comparing compression profile {profile_index} of {len(profiles)}",
+                        )
                 best = min(candidates, key=lambda path: path.stat().st_size) if candidates else info.path
                 with atomic_output(output) as temporary:
                     shutil.copyfile(best if best.stat().st_size < info.size else info.path, temporary)
         else:
             _recompress_images(document, level)
             with atomic_output(output) as temporary:
-                document.save(temporary, garbage=garbage, deflate=True, deflate_images=True, deflate_fonts=True, clean=level in {"high", "maximum"})
-                if temporary.stat().st_size >= info.size: shutil.copyfile(info.path, temporary)
+                document.save(
+                    temporary,
+                    garbage=garbage,
+                    deflate=True,
+                    deflate_images=True,
+                    deflate_fonts=True,
+                    clean=level in {"high", "maximum"},
+                )
+                if temporary.stat().st_size >= info.size:
+                    shutil.copyfile(info.path, temporary)
     if progress:
         progress(100, output.name)
     return CompressionResult(output, info.size, output.stat().st_size)

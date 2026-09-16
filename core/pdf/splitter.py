@@ -1,8 +1,9 @@
 """PDF split and extraction operations."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import fitz
 

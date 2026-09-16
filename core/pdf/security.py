@@ -1,4 +1,5 @@
 """Password protection and authorized PDF unlocking."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,20 +11,32 @@ from core.utils.validation import ValidationError, validate_pdf
 
 
 def protect_pdf(
-    source: str | Path, destination: str | Path, open_password: str, *,
-    owner_password: str | None = None, allow_printing: bool = True,
-    allow_copying: bool = True, allow_editing: bool = False,
+    source: str | Path,
+    destination: str | Path,
+    open_password: str,
+    *,
+    owner_password: str | None = None,
+    allow_printing: bool = True,
+    allow_copying: bool = True,
+    allow_editing: bool = False,
 ) -> Path:
     info = validate_pdf(source)
-    output = Path(destination).expanduser().resolve(); ensure_distinct_paths(info.path, output)
-    if not open_password: raise ValueError("Open password cannot be empty.")
-    if len(open_password.encode("utf-8")) > 127: raise ValueError("Password is too long.")
+    output = Path(destination).expanduser().resolve()
+    ensure_distinct_paths(info.path, output)
+    if not open_password:
+        raise ValueError("Open password cannot be empty.")
+    if len(open_password.encode("utf-8")) > 127:
+        raise ValueError("Password is too long.")
     owner = owner_password or open_password
     permissions = pikepdf.Permissions(
-        accessibility=allow_copying, extract=allow_copying,
-        print_lowres=allow_printing, print_highres=allow_printing,
-        modify_annotation=allow_editing, modify_assembly=allow_editing,
-        modify_form=allow_editing, modify_other=allow_editing,
+        accessibility=allow_copying,
+        extract=allow_copying,
+        print_lowres=allow_printing,
+        print_highres=allow_printing,
+        modify_annotation=allow_editing,
+        modify_assembly=allow_editing,
+        modify_form=allow_editing,
+        modify_other=allow_editing,
     )
     encryption = pikepdf.Encryption(owner=owner, user=open_password, R=6, allow=permissions, aes=True, metadata=True)
     try:
@@ -36,9 +49,12 @@ def protect_pdf(
 
 def unlock_pdf(source: str | Path, destination: str | Path, password: str) -> Path:
     info = validate_pdf(source, allow_encrypted=True)
-    output = Path(destination).expanduser().resolve(); ensure_distinct_paths(info.path, output)
-    if not info.encrypted: raise ValidationError("The selected PDF is not password protected.")
-    if not password: raise ValueError("Enter the PDF password.")
+    output = Path(destination).expanduser().resolve()
+    ensure_distinct_paths(info.path, output)
+    if not info.encrypted:
+        raise ValidationError("The selected PDF is not password protected.")
+    if not password:
+        raise ValueError("Enter the PDF password.")
     try:
         with pikepdf.open(info.path, password=password) as document, atomic_output(output) as temporary:
             document.save(temporary)

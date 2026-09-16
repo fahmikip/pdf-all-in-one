@@ -1,8 +1,9 @@
 """Offline PDF/image conversion engines."""
+
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Callable, Sequence
 
 import fitz
 from PIL import Image
@@ -38,8 +39,13 @@ def _validated_images(paths: Sequence[str | Path]) -> list[Path]:
 
 
 def images_to_pdf(
-    sources: Sequence[str | Path], destination: str | Path, *, page_size: str = "a4",
-    orientation: str = "auto", margin: str = "small", custom_margin: float = 18.0,
+    sources: Sequence[str | Path],
+    destination: str | Path,
+    *,
+    page_size: str = "a4",
+    orientation: str = "auto",
+    margin: str = "small",
+    custom_margin: float = 18.0,
     progress: Progress | None = None,
 ) -> Path:
     images = _validated_images(sources)
@@ -63,26 +69,39 @@ def images_to_pdf(
             else:
                 width, height = PAGE_SIZES[page_size]
                 landscape = orientation == "landscape" or (orientation == "auto" and width_px > height_px)
-                if landscape and width < height or not landscape and width > height:
+                if (landscape and width < height) or (not landscape and width > height):
                     width, height = height, width
             page = document.new_page(width=width, height=height)
             available = fitz.Rect(margin_points, margin_points, width - margin_points, height - margin_points)
             scale = min(available.width / width_px, available.height / height_px)
             draw_width, draw_height = width_px * scale, height_px * scale
-            left = (width - draw_width) / 2; top = (height - draw_height) / 2
-            page.insert_image(fitz.Rect(left, top, left + draw_width, top + draw_height), filename=str(image_path), keep_proportion=True)
-            if progress: progress(round((index + 1) / len(images) * 95), image_path.name)
+            left = (width - draw_width) / 2
+            top = (height - draw_height) / 2
+            page.insert_image(
+                fitz.Rect(left, top, left + draw_width, top + draw_height),
+                filename=str(image_path),
+                keep_proportion=True,
+            )
+            if progress:
+                progress(round((index + 1) / len(images) * 95), image_path.name)
         with atomic_output(output) as temporary:
             document.save(temporary, garbage=3, deflate=True)
     finally:
         document.close()
-    if progress: progress(100, output.name)
+    if progress:
+        progress(100, output.name)
     return output
 
 
 def pdf_to_images(
-    source: str | Path, output_dir: str | Path, *, image_format: str = "png", dpi: int = 150,
-    quality: int = 90, page_range: str = "", transparent: bool = False,
+    source: str | Path,
+    output_dir: str | Path,
+    *,
+    image_format: str = "png",
+    dpi: int = 150,
+    quality: int = 90,
+    page_range: str = "",
+    transparent: bool = False,
     progress: Progress | None = None,
 ) -> list[Path]:
     info = validate_pdf(source)
@@ -94,12 +113,15 @@ def pdf_to_images(
     if quality < 1 or quality > 100:
         raise ValueError("Quality must be between 1 and 100.")
     pages = parse_page_ranges(page_range, info.pages) if page_range.strip() else list(range(info.pages))
-    folder = Path(output_dir).expanduser().resolve(); folder.mkdir(parents=True, exist_ok=True)
+    folder = Path(output_dir).expanduser().resolve()
+    folder.mkdir(parents=True, exist_ok=True)
     outputs: list[Path] = []
     matrix = fitz.Matrix(dpi / 72, dpi / 72)
     with fitz.open(info.path) as document:
         for count, index in enumerate(pages, start=1):
-            pixmap = document[index].get_pixmap(matrix=matrix, alpha=transparent and image_format in {"png", "webp"}, colorspace=fitz.csRGB)
+            pixmap = document[index].get_pixmap(
+                matrix=matrix, alpha=transparent and image_format in {"png", "webp"}, colorspace=fitz.csRGB
+            )
             mode = "RGBA" if pixmap.alpha else "RGB"
             image = Image.frombytes(mode, (pixmap.width, pixmap.height), pixmap.samples)
             output = folder / f"{info.path.stem}_page_{index + 1}.{image_format}"
@@ -107,5 +129,6 @@ def pdf_to_images(
             options = {"quality": quality} if image_format in {"jpg", "webp"} else {"compress_level": 6}
             image.save(output, save_format, **options)
             outputs.append(output)
-            if progress: progress(round(count / len(pages) * 100), f"Page {index + 1}")
+            if progress:
+                progress(round(count / len(pages) * 100), f"Page {index + 1}")
     return outputs

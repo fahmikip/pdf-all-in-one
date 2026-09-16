@@ -1,8 +1,9 @@
 """Extract text and embedded images from PDF documents."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import fitz
 from PIL import Image
@@ -14,7 +15,10 @@ Progress = Callable[[int, str], None]
 
 
 def extract_text(
-    source: str | Path, destination: str | Path, *, page_range: str = "",
+    source: str | Path,
+    destination: str | Path,
+    *,
+    page_range: str = "",
     progress: Progress | None = None,
 ) -> Path:
     """Write the PDF text to a UTF-8 text file, separated by page markers."""
@@ -29,17 +33,24 @@ def extract_text(
             page = document[index]
             text = page.get_text("text").strip()
             buffers.append(f"--- Page {index + 1} ---\n{text}\n")
-            if progress: progress(round(count / len(pages) * 100), f"Page {index + 1}")
+            if progress:
+                progress(round(count / len(pages) * 100), f"Page {index + 1}")
         content = "\n".join(buffers)
     with atomic_output(output) as temporary:
         temporary.write_text(content, encoding="utf-8")
-    if progress: progress(100, output.name)
+    if progress:
+        progress(100, output.name)
     return output
 
 
 def extract_images(
-    source: str | Path, output_dir: str | Path, *, image_format: str = "png",
-    min_size: int = 0, page_range: str = "", progress: Progress | None = None,
+    source: str | Path,
+    output_dir: str | Path,
+    *,
+    image_format: str = "png",
+    min_size: int = 0,
+    page_range: str = "",
+    progress: Progress | None = None,
 ) -> list[Path]:
     """Extract embedded raster images from the PDF into individual files."""
     info = validate_pdf(source)
@@ -49,11 +60,21 @@ def extract_images(
     if min_size < 0:
         raise ValueError("Minimum size must be zero or greater.")
     pages = _parse_ranges(page_range, info.pages)
-    folder = Path(output_dir).expanduser().resolve(); folder.mkdir(parents=True, exist_ok=True)
+    folder = Path(output_dir).expanduser().resolve()
+    folder.mkdir(parents=True, exist_ok=True)
     targets: list[tuple[int, list[tuple]]] = []
     with fitz.open(info.path) as document:
         for index in pages:
-            targets.append((index, [item for item in document[index].get_images(full=True) if not min_size or item[2] * item[3] >= min_size]))
+            targets.append(
+                (
+                    index,
+                    [
+                        item
+                        for item in document[index].get_images(full=True)
+                        if not min_size or item[2] * item[3] >= min_size
+                    ],
+                )
+            )
         total = sum(len(items) for _, items in targets)
         if not total:
             raise ValueError("No embedded images were found in the selected pages.")
@@ -65,7 +86,9 @@ def extract_images(
                 pixmap = fitz.Pixmap(document, xref)
                 if pixmap.n - pixmap.alpha > 3 or pixmap.colorspace is None:
                     pixmap = fitz.Pixmap(fitz.csRGB, pixmap)
-                image = Image.frombytes("RGBA" if pixmap.alpha else "RGB", (pixmap.width, pixmap.height), pixmap.samples)
+                image = Image.frombytes(
+                    "RGBA" if pixmap.alpha else "RGB", (pixmap.width, pixmap.height), pixmap.samples
+                )
                 name = f"{info.path.stem}_image_{current + 1}.{image_format}"
                 file_path = folder / name
                 if image_format == "png":
@@ -74,8 +97,10 @@ def extract_images(
                     image.convert("RGB").save(file_path, "JPEG" if image_format == "jpg" else "WEBP")
                 outputs.append(file_path)
                 current += 1
-                if progress: progress(round(current / total * 100), f"Weighted page {index + 1} · {name}")
-    if progress: progress(100, f"{len(outputs)} images extracted")
+                if progress:
+                    progress(round(current / total * 100), f"Weighted page {index + 1} · {name}")
+    if progress:
+        progress(100, f"{len(outputs)} images extracted")
     return outputs
 
 

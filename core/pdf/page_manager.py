@@ -1,9 +1,10 @@
 """Non-destructive page removal, reordering, duplication and rotation."""
+
 from __future__ import annotations
 
-from pathlib import Path
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from pathlib import Path
 
 import fitz
 

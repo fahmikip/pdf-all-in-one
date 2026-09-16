@@ -1,4 +1,5 @@
 """Crisp, theme-friendly vector icons for the application shell."""
+
 from __future__ import annotations
 
 from PySide6.QtCore import QByteArray, Qt
@@ -30,8 +31,12 @@ PATHS = {
 def _pixmap(name: str, color: str, size: int) -> QPixmap:
     body = PATHS.get(name, PATHS["app"])
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{body}</svg>'
-    pixmap = QPixmap(size, size); pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap); painter.setRenderHint(QPainter.RenderHint.Antialiasing); QSvgRenderer(QByteArray(svg.encode())).render(painter); painter.end()
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    QSvgRenderer(QByteArray(svg.encode())).render(painter)
+    painter.end()
     return pixmap
 
 

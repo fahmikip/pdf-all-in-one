@@ -1,9 +1,10 @@
 """Primary application navigation with color-coded sections."""
+
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+
 from ui.icons import icon
 
 SECTION_COLORS = {
@@ -27,8 +28,12 @@ class Sidebar(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 18, 12, 12)
         layout.setSpacing(4)
-        brand_row = QHBoxLayout(); brand_row.setContentsMargins(6, 0, 6, 0); brand_row.setSpacing(9)
-        brand_icon = QLabel(); brand_icon.setPixmap(icon("app", 22).pixmap(22, 22)); brand_row.addWidget(brand_icon)
+        brand_row = QHBoxLayout()
+        brand_row.setContentsMargins(6, 0, 6, 0)
+        brand_row.setSpacing(9)
+        brand_icon = QLabel()
+        brand_icon.setPixmap(icon("app", 22).pixmap(22, 22))
+        brand_row.addWidget(brand_icon)
         brand = QLabel("PDF Master")
         brand.setObjectName("brand")
         brand_row.addWidget(brand, 1)
@@ -51,7 +56,13 @@ class Sidebar(QFrame):
         self.buttons: dict[str, QPushButton] = {}
         groups = {
             "": [("home", "Home")],
-            "PDF TOOLS": [("compress", "Compress PDF"), ("merge", "Merge PDF"), ("split", "Split PDF"), ("organize", "Organize PDF"), ("extract", "Extract PDF")],
+            "PDF TOOLS": [
+                ("compress", "Compress PDF"),
+                ("merge", "Merge PDF"),
+                ("split", "Split PDF"),
+                ("organize", "Organize PDF"),
+                ("extract", "Extract PDF"),
+            ],
             "CONVERT": [("convert", "Convert Files")],
             "EDIT": [("edit", "Watermark & More"), ("forms", "PDF Forms & Sign")],
             "SECURITY": [("security", "Protect / Unlock")],
@@ -63,7 +74,9 @@ class Sidebar(QFrame):
             if heading:
                 navigation_layout.addSpacing(7)
                 label = QLabel(heading)
-                label.setStyleSheet(f"color: {SECTION_COLORS[heading]}; font-weight: 700; font-size: 11px; letter-spacing: 1px;")
+                label.setStyleSheet(
+                    f"color: {SECTION_COLORS[heading]}; font-weight: 700; font-size: 11px; letter-spacing: 1px;"
+                )
                 label.setContentsMargins(8, 0, 0, 0)
                 navigation_layout.addWidget(label)
             for key, text in entries:

@@ -2,13 +2,12 @@ from pathlib import Path
 
 import fitz
 import pytest
-from docx import Document
-from openpyxl import load_workbook
-from PIL import Image
-
 from core.office.libreoffice_converter import LibreOfficeUnavailableError, find_libreoffice, office_to_pdf
 from core.office.pdf_to_excel import pdf_to_excel
 from core.office.pdf_to_word import pdf_to_word
+from docx import Document
+from openpyxl import load_workbook
+from PIL import Image
 
 
 def test_pdf_to_word_extracts_text(sample_pdf: Path, tmp_path: Path) -> None:
@@ -46,7 +45,8 @@ def test_pdf_to_excel_empty_page_raises(sample_pdf: Path, tmp_path: Path) -> Non
     blank = tmp_path / "blank.pdf"
     document = fitz.open()
     document.new_page(width=300, height=400)
-    document.save(blank); document.close()
+    document.save(blank)
+    document.close()
     with pytest.raises(ValueError):
         pdf_to_excel(blank, tmp_path / "out.xlsx")
 
@@ -73,14 +73,18 @@ def _table_pdf(path: Path) -> Path:
     left, right = 40, 190
     top = 70
     baseline = [top]
-    for r, row in enumerate(rows): baseline.append(top + 30 + r * 30)
+    for r, _row in enumerate(rows):
+        baseline.append(top + 30 + r * 30)
     page.draw_line((left, top), (right, top))
     for y in baseline[1:]:
         page.draw_line((left, y), (right, y))
-    page.draw_line((left, top), (left, baseline[-1])); page.draw_line((right, top), (right, baseline[-1]))
-    for column, cell in enumerate(header): page.insert_text((left + 25 + column * 90, baseline[0] + 4), cell, fontname="hebo")
+    page.draw_line((left, top), (left, baseline[-1]))
+    page.draw_line((right, top), (right, baseline[-1]))
+    for column, cell in enumerate(header):
+        page.insert_text((left + 25 + column * 90, baseline[0] + 4), cell, fontname="hebo")
     for r, row in enumerate(rows):
-        for column, value in enumerate(row): page.insert_text((left + 25 + column * 90, baseline[r + 1] + 4), value, fontname="helv")
+        for column, value in enumerate(row):
+            page.insert_text((left + 25 + column * 90, baseline[r + 1] + 4), value, fontname="helv")
     document.save(path)
     document.close()
     return path

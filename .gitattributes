@@ -1,0 +1,29 @@
+# Normalisasi line endings
+* text=auto
+
+# Kode & teks: LF
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.txt text eol=lf
+*.ini text eol=lf
+*.spec text eol=lf
+*.json text eol=lf
+*.svg text eol=lf
+
+# Skrip Windows: CRLF
+*.bat text eol=crlf
+
+# Biner
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.bmp binary
+*.exe binary
+
+# Berkas yang ditandai bukan kode oleh linguist
+*.bat linguist-language=Batchfile
+tests/ linguist-vendored=false

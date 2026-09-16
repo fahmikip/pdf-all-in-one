@@ -2,15 +2,23 @@ from pathlib import Path
 
 import fitz
 import pytest
-
 from core.pdf.forms import fill_pdf_form, list_form_fields, sign_pdf
 
 
 def _form_pdf(path: Path) -> Path:
     document = fitz.open()
     page = document.new_page(width=300, height=400)
-    entry = fitz.Widget(); entry.rect = fitz.Rect(50, 50, 200, 80); entry.field_name = "Name"; entry.field_type = fitz.PDF_WIDGET_TYPE_TEXT; page.add_widget(entry)
-    entry = fitz.Widget(); entry.rect = fitz.Rect(50, 100, 200, 115); entry.field_name = "Agree"; entry.field_type = fitz.PDF_WIDGET_TYPE_CHECKBOX; entry.button_name = "Agree"; page.add_widget(entry)
+    entry = fitz.Widget()
+    entry.rect = fitz.Rect(50, 50, 200, 80)
+    entry.field_name = "Name"
+    entry.field_type = fitz.PDF_WIDGET_TYPE_TEXT
+    page.add_widget(entry)
+    entry = fitz.Widget()
+    entry.rect = fitz.Rect(50, 100, 200, 115)
+    entry.field_name = "Agree"
+    entry.field_type = fitz.PDF_WIDGET_TYPE_CHECKBOX
+    entry.button_name = "Agree"
+    page.add_widget(entry)
     document.save(path)
     document.close()
     return path
@@ -18,6 +26,7 @@ def _form_pdf(path: Path) -> Path:
 
 def _signature_image(path: Path) -> Path:
     from PIL import Image
+
     Image.new("RGB", (90, 45), (10, 20, 30)).save(path)
     return path
 
@@ -53,10 +62,18 @@ def test_fill_pdf_form_rejects_non_pdf(sample_pdf: Path, tmp_path: Path) -> None
 def test_sign_pdf_overlays_image_and_name(tmp_path: Path) -> None:
     pdf = _form_pdf(tmp_path / "base.pdf")
     image = _signature_image(tmp_path / "sig.png")
-    output = sign_pdf(pdf, tmp_path / "signed.pdf", image_path=image, page_number=1, rect=(40, 200, 140, 245), name="Budi", role="Manager")
+    output = sign_pdf(
+        pdf,
+        tmp_path / "signed.pdf",
+        image_path=image,
+        page_number=1,
+        rect=(40, 200, 140, 245),
+        name="Budi",
+        role="Manager",
+    )
     assert output.exists() and output.stat().st_size > 0
     with fitz.open(output) as doc:
-        drawings = list(doc[0].get_drawings())
+        _drawings = list(doc[0].get_drawings())
         images = doc[0].get_images(full=True)
         text = doc[0].get_text()
     assert images and "Budi" in text and "Manager" in text

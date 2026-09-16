@@ -1,8 +1,9 @@
 """Thread-pool worker for long-running document operations."""
+
 from __future__ import annotations
 
-import traceback
 import logging
+import traceback
 from collections.abc import Callable
 from typing import Any
 
