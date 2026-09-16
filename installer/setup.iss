@@ -1,5 +1,5 @@
 #define MyAppName "PDF Master"
-#define MyAppVersion "1.5.0"
+#define MyAppVersion "1.5.1"
 #define MyAppPublisher "Fahmikip"
 #define MyAppURL "https://github.com/fahmikip"
 #define MyAppExeName "PDFMaster.exe"

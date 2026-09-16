@@ -64,6 +64,79 @@ def test_missing_libreoffice_has_friendly_error(tmp_path: Path, monkeypatch) -> 
         office_to_pdf(tmp_path / "document.docx", tmp_path / "document.pdf")
 
 
+def test_find_libreoffice_uses_manual_path(tmp_path: Path) -> None:
+    soffice = tmp_path / "soffice.exe"
+    soffice.write_bytes(b"MZ")
+    assert find_libreoffice(soffice) == soffice.resolve()
+
+
+def test_office_to_pdf_rejects_missing_file(monkeypatch, tmp_path: Path) -> None:
+    soffice = tmp_path / "soffice.exe"
+    soffice.write_bytes(b"MZ")
+    with pytest.raises(ValueError):
+        office_to_pdf(tmp_path / "missing.docx", tmp_path / "out.pdf", executable=soffice)
+
+
+def test_office_to_pdf_rejects_unsupported_extension(monkeypatch, tmp_path: Path) -> None:
+    soffice = tmp_path / "soffice.exe"
+    soffice.write_bytes(b"MZ")
+    document = tmp_path / "archive.html"
+    document.write_text("<html></html>", encoding="utf-8")
+    with pytest.raises(ValueError):
+        office_to_pdf(document, tmp_path / "out.pdf", executable=soffice)
+
+
+def test_office_to_pdf_rejects_wrong_output_suffix(monkeypatch, tmp_path: Path) -> None:
+    soffice = tmp_path / "soffice.exe"
+    soffice.write_bytes(b"MZ")
+    document = tmp_path / "document.docx"
+    document.write_bytes(b"PK")
+    with pytest.raises(ValueError):
+        office_to_pdf(document, tmp_path / "out.docx", executable=soffice)
+
+
+def test_office_to_pdf_success(tmp_path: Path, monkeypatch) -> None:
+    soffice = tmp_path / "soffice.exe"
+    soffice.write_bytes(b"MZ")
+    document = tmp_path / "document.docx"
+    document.write_bytes(b"PK")
+    captured: list[list[str]] = []
+
+    def fake_run(command, *, capture_output=True, text=True, timeout=600, check=False, creationflags=0):
+        captured.append(list(command))
+        outdir = Path(command[9])
+        generated = outdir / f"{Path(command[10]).stem}.pdf"
+        pdf = fitz.open()
+        pdf.new_page(width=200, height=200)
+        pdf.save(generated)
+        pdf.close()
+        return type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+
+    monkeypatch.setattr("core.office.libreoffice_converter.subprocess.run", fake_run)
+    destination = tmp_path / "out.pdf"
+    progress: list[tuple[int, str]] = []
+    result = office_to_pdf(document, destination, executable=soffice, progress=lambda v, d: progress.append((v, d)))
+    assert result == destination.resolve()
+    with fitz.open(destination) as pdf:
+        assert pdf.page_count == 1
+    assert captured and "soffice" in captured[0][0]
+    assert progress == [(10, "Starting LibreOffice"), (90, "Finalizing PDF"), (100, destination.name)]
+
+
+def test_office_to_pdf_raises_on_subprocess_failure(tmp_path: Path, monkeypatch) -> None:
+    soffice = tmp_path / "soffice.exe"
+    soffice.write_bytes(b"MZ")
+    document = tmp_path / "document.docx"
+    document.write_bytes(b"PK")
+
+    def fake_run(command, *, capture_output=True, text=True, timeout=600, check=False, creationflags=0):
+        return type("Result", (), {"returncode": 1, "stdout": "oops", "stderr": ""})()
+
+    monkeypatch.setattr("core.office.libreoffice_converter.subprocess.run", fake_run)
+    with pytest.raises(RuntimeError, match="oops"):
+        office_to_pdf(document, tmp_path / "out.pdf", executable=soffice)
+
+
 def _table_pdf(path: Path) -> Path:
     document = fitz.open()
     page = document.new_page(width=400, height=400)

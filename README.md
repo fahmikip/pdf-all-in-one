@@ -8,7 +8,7 @@
 
 **PDF Master** adalah perangkat PDF all-in-one untuk Windows yang berjalan sepenuhnya **offline**, dibangun dengan Python 3.12 dan PySide6. Semua operasi dokumen dijalankan di komputer Anda sendiri — tidak ada yang diunggah, dan tidak ada pelacakan atau telemetri.
 
-Versi saat ini: **v1.5.0**
+Versi saat ini: **v1.5.1**
 
 ---
 
@@ -94,6 +94,26 @@ Jalankan rangkaian tes dengan `python -m pytest`.
 
 11. **Editor objek (Insert & Edit)**
     Pilih **Edit PDF** → tab *Insert & Edit* → pilih PDF → **Add Image** untuk foto (JPEG/JPG/PNG) atau **Add Text** untuk teks. Geser objek untuk memindah posisi, tarik titik sudut untuk mengubah ukuran gambar, pilih font/ukuran/warna di panel, pilih halaman, lalu **Save PDF**.
+
+## FAQ
+
+### Windows menampilkan "Windows protected your PC" / "Unknown publisher" saat menjalankan PDF Master
+Itu **normal** dan bukan virus. PDF Master tidak ditandatangani dengan sertifikat EV, sehingga Windows SmartScreen belum mengenali pengembangnya. Untuk menjalankan: klik **More info** → **Run anyway**. Hindari men-download build dari sumber selain halaman **Releases** resmi.
+
+### Antivirus tiba-tiba menandai PDFMaster.exe
+Karena aplikasi ini dikemas dengan **PyInstaller** (bundling Python + pustaka ke satu `.exe`), beberapa antivirus terkadang melaporkan *false positive*. Jika yakin file berasal dari halaman **Releases** resmi, tambahkan pengecualian di antivirus Anda. Anda juga bisa membandingkan *checksum* sha256 yang tercantum di rilis.
+
+### Apakah perlu LibreOffice / Tesseract?
+Tidak wajib. Keduanya **opsional** dan hanya dibutuhkan bila Anda ingin:
+- **LibreOffice** — konversi Word/Excel/PowerPoint → PDF;
+- **Tesseract** — membuat hasil scan dapat dicari (OCR).
+Alat PDF lainnya berjalan tanpa instalasi tambahan.
+
+### Apakah file asli saya bisa berubah?
+Tidak. Semua hasil operasi ditulis ke **file baru**; file asli tidak pernah ditimpa. UI bahkan menolak lokasi keluaran yang sama dengan sumber.
+
+### Apakah dokumen saya terunggah?
+Tidak. Semua pemrosesan terjadi **lokal** di komputer Anda. Pemeriksaan pembaruan hanya menanyakan nomor versi ke GitHub dan selalu atas izin Anda.
 
 ## Membangun Rilis Portable
 

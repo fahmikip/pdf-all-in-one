@@ -4,11 +4,18 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-09-16
+
+### Diubah
+- Lisensi diganti dari hak cipta tertutup menjadi **MIT License**.
+- Ditambahkan `CHANGELOG.md`, `CONTRIBUTING.md`, dan `SECURITY.md`.
+- Kualitas kode: linter & formatter **Ruff**, pola pre-commit, dan langkah CI untuk lint + format + coverage.
+- Screenshot aplikasi dan badge coverage ditambahkan ke README.
+
 ## [1.5.0] - 2026-09-15
 
 ### Diubah
 - Revamp total UI: tombol semantik warna-warni dan pengalaman pengguna yang lebih jelas.
-- Lisensi diganti dari hak cipta tertutup menjadi **MIT License**.
 
 ## [1.4.0] - 2026-09-10
 
@@ -51,6 +58,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan v
 - Pemrosesan batch dan **Riwayat** lokal tanpa isi dokumen.
 - Kompresi PDF adaptif dengan profil Rendah / Disarankan / Tinggi / Maksimum.
 
+[1.5.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.1
 [1.5.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.0
 [1.4.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.4.0
 [1.3.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.3.0
