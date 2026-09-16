@@ -1,5 +1,10 @@
 # PDF Master
 
+![License](https://img.shields.io/github/license/fahmikip/pdf-all-in-one)
+![Release](https://img.shields.io/github/v/release/fahmikip/pdf-all-in-one)
+![CI](https://github.com/fahmikip/pdf-all-in-one/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+
 **PDF Master** adalah perangkat PDF all-in-one untuk Windows yang berjalan sepenuhnya **offline**, dibangun dengan Python 3.12 dan PySide6. Semua operasi dokumen dijalankan di komputer Anda sendiri — tidak ada yang diunggah, dan tidak ada pelacakan atau telemetri.
 
 Versi saat ini: **v1.5.0**
@@ -97,3 +102,7 @@ PDF Master memproses dokumen secara **lokal**. Tidak ada telemetri atau analitik
 Dikembangkan oleh **Fahmikip** · https://github.com/fahmikip · © 2026 Fahmikip
 
 Build portabel Windows: lihat halaman **Releases**.
+
+## Berkontribusi
+
+Dilisensikan di bawah **MIT**. Lihat [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan pengembangan, [SECURITY.md](SECURITY.md) untuk kebijakan keamanan, dan [CHANGELOG.md](CHANGELOG.md) untuk riwayat rilis.

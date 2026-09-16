@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build portable & installer for ${{ github.ref_name }}
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Prepare assets
+        run: python installer\prepare_assets.py
+
+      - name: Build portable exe
+        run: pyinstaller --noconfirm PDFMaster.spec
+
+      - name: Create portable zip
+        run: |
+          $version = Get-Content version.txt
+          Compress-Archive -Path dist\PDF-Master\* -DestinationPath "dist\PDF-Master-v$version-Windows-x64.zip"
+          echo "ZIP=dist\PDF-Master-v$version-Windows-x64.zip" >> $env:GITHUB_ENV
+
+      - name: Install Inno Setup 6
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build installer
+        run: "& 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' installer\setup.iss"
+
+      - name: Find installer output
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem dist\installer\*.exe | Select-Object -First 1
+          echo "INSTALLER=$($installer.FullName)" >> $env:GITHUB_ENV
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" "$env:ZIP" "$env:INSTALLER" `
+            --title "PDF Master ${{ github.ref_name }}" `
+            --notes "Lihat CHANGELOG.md untuk daftar perubahan lengkap."
