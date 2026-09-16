@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import fitz
+import pymupdf
 from core.jobs.worker import FunctionWorker
 from core.pdf.watermark import insert_objects
 from core.utils.validation import validate_pdf
@@ -167,7 +167,6 @@ class TextItem(ObjectItem):
         event.accept()
 
     def apply_style(self, family: str, size_pt: float, color: QColor) -> None:
-        self.text = self.text
         self.size_pt = size_pt
         self.color = QColor(color)
         self._font = QFont(family)
@@ -295,7 +294,7 @@ class EditorPage(QWidget):
             return
         try:
             info = validate_pdf(name)
-            with fitz.open(info.path) as document:
+            with pymupdf.open(info.path) as document:
                 width = document[0].rect.width
         except Exception as exc:
             QMessageBox.warning(self, "Cannot open PDF", str(exc))
@@ -320,8 +319,8 @@ class EditorPage(QWidget):
     def _render_page(self, index: int) -> QPixmap:
         if index in self._pages:
             return self._pages[index]
-        with fitz.open(self.source) as document:
-            pixmap = document[index].get_pixmap(matrix=fitz.Matrix(self.zoom, self.zoom), alpha=False)
+        with pymupdf.open(self.source) as document:
+            pixmap = document[index].get_pixmap(matrix=pymupdf.Matrix(self.zoom, self.zoom), alpha=False)
         image = QImage(pixmap.samples, pixmap.width, pixmap.height, pixmap.stride, QImage.Format.Format_RGB888).copy()
         result = QPixmap.fromImage(image)
         self._pages[index] = result
@@ -372,6 +371,7 @@ class EditorPage(QWidget):
         path = str(Path(name).resolve())
         item = ImageItem(x, y, width, height, path, pixmap)
         self.scene.addItem(item)
+        self.page_objects.setdefault(self._page_index, []).append(item)
         item.setSelected(True)
         self.status.setText("Image added. Drag to position; use corner dots to resize.")
         self._sync_controls()
@@ -391,6 +391,7 @@ class EditorPage(QWidget):
             self.zoom,
         )
         self.scene.addItem(item)
+        self.page_objects.setdefault(self._page_index, []).append(item)
         item.setSelected(True)
         self.status.setText("Text added. Double-click the text to edit it.")
 
@@ -398,11 +399,7 @@ class EditorPage(QWidget):
         for item in list(self.scene.selectedItems()):
             if isinstance(item, (ImageItem, TextItem)):
                 self.scene.removeItem(item)
-
-    def _delete_selected(self) -> None:
-        for item in list(self.scene.selectedItems()):
-            if isinstance(item, (ImageItem, TextItem)):
-                self.scene.removeItem(item)
+                self.page_objects.get(self._page_index, []).remove(item)
                 item.deleteLater()
 
     def _selected_object(self):
