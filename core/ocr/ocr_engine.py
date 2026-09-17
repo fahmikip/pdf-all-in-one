@@ -128,7 +128,9 @@ def ocr_pdf(
         with pymupdf.open(info.path) as document:
             for index, page in enumerate(document):
                 image = work / f"page-{index + 1}.png"
-                page.get_pixmap(matrix=pymupdf.Matrix(dpi / 72, dpi / 72), colorspace=pymupdf.csRGB, alpha=False).save(image)
+                page.get_pixmap(matrix=pymupdf.Matrix(dpi / 72, dpi / 72), colorspace=pymupdf.csRGB, alpha=False).save(
+                    image
+                )
                 base = work / f"ocr-{index + 1}"
                 result = subprocess.run(
                     _command(tesseract, image, str(base), language, output_format),

@@ -1,6 +1,7 @@
 .venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -12,3 +13,5 @@ logs/
 temp/
 *.spec.bak
 temp_visual_check.png
+installer/version_info.txt
+installer/version.iss

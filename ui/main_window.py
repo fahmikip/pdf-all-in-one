@@ -6,7 +6,7 @@ from pathlib import Path
 
 from app.config import APP_NAME, VERSION, ConfigStore, Settings, local_data_dir
 from core.jobs.worker import FunctionWorker
-from core.utils.updater import UpdateInfo, check_for_update, download_release_asset
+from core.utils.updater import UpdateInfo, check_for_update, download_installer
 from PySide6.QtCore import QProcess, Qt, QThreadPool, QTimer, QUrl
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QMessageBox, QProgressDialog, QStackedWidget, QWidget
@@ -162,7 +162,7 @@ class MainWindow(QMainWindow):
         folder = local_data_dir() / "updates"
         folder.mkdir(parents=True, exist_ok=True)
         target = folder / (update.installer.name)
-        worker = FunctionWorker(download_release_asset, update.installer, str(target), with_progress=True)
+        worker = FunctionWorker(download_installer, update, str(target), with_progress=True)
         self.update_worker = worker
         worker.signals.progress.connect(self._update_progress)
         worker.signals.result.connect(self._install_downloaded)

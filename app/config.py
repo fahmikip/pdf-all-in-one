@@ -30,7 +30,6 @@ class Settings:
     ask_output_location: bool = True
     remember_last_directory: bool = True
     show_welcome: bool = True
-    language: str = "id"
     default_compression: str = "recommended"
     default_dpi: int = 150
     check_updates: bool = True

@@ -24,7 +24,7 @@ Versi saat ini: **v1.5.1**
 
 | Kategori | Alat | Fungsi |
 | --- | --- | --- |
-| Alat PDF | Kompres PDF | Perkecil ukuran file dengan profil Rendah / Disarankan / Tinggi / Maksimum; mode agresif untuk file yang sudah optimal |
+| Alat PDF | Kompres PDF | Perkecil ukuran file dengan profil Rendah / Disarankan / Tinggi / Maksimum; tiga mesin (Built-in, Lossless qpdf, dan Ghostscript untuk scan); mode agresif untuk file yang sudah optimal |
 | Alat PDF | Gabung PDF | Gabungkan dua PDF atau lebih, atur urutan dengan drag |
 | Alat PDF | Pecah PDF | Pecah per halaman, setiap N halaman, atau rentang tertentu (mis. `1-3, 5`) |
 | Alat PDF | Susun PDF | Urut ulang, putar, dan hapus halaman |
@@ -44,10 +44,11 @@ Semua hasil edit ditulis ke file **baru** — file asli Anda tidak pernah diubah
 ## Persyaratan Sistem
 
 - Windows 10/11 (64-bit)
-- Python 3.12 untuk menjalankan dari kode sumber
+- Python 3.12 atau 3.13 untuk menjalankan dari kode sumber
 - Alat eksternal opsional (terdeteksi terpisah, tidak disertakan):
   - **LibreOffice** — konversi Office (Word/Excel/PowerPoint) → PDF
   - **Tesseract** — mesin OCR
+  - **Ghostscript** — mesin kompresi tambahan (sangat baik untuk PDF hasil scan)
 
 ## Menjalankan dari Kode Sumber
 

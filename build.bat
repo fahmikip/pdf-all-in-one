@@ -4,7 +4,7 @@ cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" py -3.12 -m venv .venv
 call .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -e ".[dev]"
 if errorlevel 1 exit /b 1
 python -m pytest
 if errorlevel 1 exit /b 1

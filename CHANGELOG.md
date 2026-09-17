@@ -4,6 +4,20 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Ditambahkan
+- Verifikasi **SHA-256** untuk installer hasil unduhan; rilis kini menyertakan aset `SHA256SUMS.txt` dan pengunduh menolak file yang tidak cocok.
+- Mesin kompresi baru: **Lossless (qpdf/pikepdf)** dan **Ghostscript**, dapat dipilih di halaman Kompres PDF.
+- Langkah **code signing** opsional (Azure Trusted Signing) pada workflow rilis.
+- Badge coverage kini diperbarui otomatis oleh CI.
+
+### Diubah
+- Versi kini bersumber tunggal dari `version.txt` (dipakai `pyproject.toml`, `version_info.txt`, dan installer Inno Setup).
+- `requirements.txt` hanya berisi dependensi runtime; dependensi pengembangan dipindah ke ekstra `[dev]`.
+- Matriks CI diperluas ke Python **3.13**.
+- Menghapus pengaturan bahasa yang tidak dipakai dari `Settings`.
+
 ## [1.5.1] - 2026-09-16
 
 ### Diubah

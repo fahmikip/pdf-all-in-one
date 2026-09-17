@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
 import tempfile
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
+import pikepdf
 import pymupdf
 from PIL import Image
 
@@ -80,12 +82,110 @@ def _raster_compress(document: pymupdf.Document, dpi: int, quality: int, progres
     return result
 
 
+_GHOSTSCRIPT_CANDIDATES = ("gswin64c", "gswin32c", "gs")
+
+
+def find_ghostscript() -> str | None:
+    """Return the first available Ghostscript command on this system, if any."""
+    for name in _GHOSTSCRIPT_CANDIDATES:
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+def ghostscript_pdf(
+    source: str | Path,
+    destination: str | Path,
+    level: str = "recommended",
+    progress=None,
+) -> Path:
+    """Compress with the Ghostscript pdfwrite engine (strong for scanned PDFs)."""
+    if level not in {"low", "recommended", "high", "maximum"}:
+        raise ValueError("Unknown compression level.")
+    executable = find_ghostscript()
+    if not executable:
+        raise RuntimeError(
+            "Ghostscript is not installed. Install Ghostscript and restart PDF Master to use this engine."
+        )
+    info = validate_pdf(source)
+    output = Path(destination).expanduser().resolve()
+    ensure_distinct_paths(info.path, output)
+    settings, resolution = {
+        "low": ("/prepress", 300),
+        "recommended": ("/printer", 200),
+        "high": ("/ebook", 150),
+        "maximum": ("/screen", 100),
+    }[level]
+    command = [
+        executable,
+        "-q",
+        "-dNOPAUSE",
+        "-dBATCH",
+        "-dSAFER",
+        "-sDEVICE=pdfwrite",
+        "-dCompatibilityLevel=1.5",
+        f"-dPDFSETTINGS={settings}",
+        "-dAutoRotatePages=/None",
+        "-dDownsampleColorImages=true",
+        f"-dColorImageResolution={resolution}",
+        "-dDownsampleGrayImages=true",
+        f"-dGrayImageResolution={resolution}",
+        "-dDownsampleMonoImages=true",
+        f"-dMonoImageResolution={resolution * 2}",
+        "-dCompressPages=true",
+        "-dEmbedAllFonts=true",
+        "-dSubsetFonts=true",
+        "-dDetectDuplicateImages=true",
+    ]
+    if progress:
+        progress(20, "Running Ghostscript optimizer…")
+    with atomic_output(output) as temporary:
+        result = subprocess.run(
+            [*command, f"-sOutputFile={temporary}", str(info.path)],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Ghostscript failed with exit code {result.returncode}."
+                + (f"\n{result.stderr.strip()[:800]}" if result.stderr.strip() else "")
+            )
+        if progress:
+            progress(90, "Finalizing Ghostscript output…")
+        if temporary.stat().st_size >= info.size:
+            shutil.copyfile(info.path, temporary)
+    if progress:
+        progress(100, output.name)
+    return output
+
+
+def qpdf_lossless(source: str | Path, destination: str | Path, *, linearize: bool = True) -> Path:
+    """Lossless qpdf-style cleanup via pikepdf: linearize and recompress streams."""
+    info = validate_pdf(source)
+    output = Path(destination).expanduser().resolve()
+    ensure_distinct_paths(info.path, output)
+    with pikepdf.open(info.path) as pdf, atomic_output(output) as temporary:
+        pdf.save(
+            str(temporary),
+            linearize=linearize,
+            recompress_flate=True,
+            object_stream_mode=pikepdf.ObjectStreamMode.generate,
+        )
+    if output.stat().st_size >= info.size:
+        shutil.copyfile(info.path, output)
+    return output
+
+
 def compress_pdf(
     source: str | Path,
     destination: str | Path,
     level: str = "recommended",
     clean_metadata: bool = False,
     aggressive: bool = False,
+    engine: str = "builtin",
     progress=None,
 ) -> CompressionResult:
     if level not in {"low", "recommended", "high", "maximum"}:
@@ -93,6 +193,12 @@ def compress_pdf(
     info = validate_pdf(source)
     output = Path(destination).expanduser().resolve()
     ensure_distinct_paths(info.path, output)
+    if engine == "ghostscript":
+        target = ghostscript_pdf(info.path, output, level=level, progress=progress)
+        return CompressionResult(target, info.size, target.stat().st_size)
+    if engine == "qpdf":
+        target = qpdf_lossless(info.path, output)
+        return CompressionResult(target, info.size, target.stat().st_size)
     garbage = {"low": 1, "recommended": 3, "high": 4, "maximum": 4}[level]
     with pymupdf.open(info.path) as document:
         if clean_metadata:

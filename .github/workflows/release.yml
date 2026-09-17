@@ -12,6 +12,13 @@ jobs:
   build:
     name: Build portable & installer for ${{ github.ref_name }}
     runs-on: windows-latest
+    env:
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TS_ENDPOINT: ${{ secrets.AZURE_TS_ENDPOINT }}
+      AZURE_TS_ACCOUNT: ${{ secrets.AZURE_TS_ACCOUNT }}
+      AZURE_TS_PROFILE: ${{ secrets.AZURE_TS_PROFILE }}
 
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
 
       - name: Run tests
         run: python -m pytest
@@ -34,6 +41,22 @@ jobs:
 
       - name: Build portable exe
         run: pyinstaller --noconfirm PDFMaster.spec
+
+      - name: Sign portable executables
+        if: env.AZURE_TENANT_ID != ''
+        uses: azure/trusted-signing-action@v0
+        with:
+          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
+          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
+          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
+          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
+          files-folder: dist\PDF-Master
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Create portable zip
         run: |
@@ -54,10 +77,36 @@ jobs:
           $installer = Get-ChildItem dist\installer\*.exe | Select-Object -First 1
           echo "INSTALLER=$($installer.FullName)" >> $env:GITHUB_ENV
 
+      - name: Sign installer
+        if: env.AZURE_TENANT_ID != ''
+        uses: azure/trusted-signing-action@v0
+        with:
+          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
+          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
+          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
+          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
+          files-folder: dist\installer
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Generate SHA-256 checksums
+        shell: pwsh
+        run: |
+          $lines = foreach ($file in @($env:ZIP, $env:INSTALLER)) {
+            $hash = (Get-FileHash -Algorithm SHA256 -Path $file).Hash.ToLower()
+            "$hash *$([System.IO.Path]::GetFileName($file))"
+          }
+          Set-Content -Path "dist\SHA256SUMS.txt" -Value $lines -Encoding utf8
+          echo "CHECKSUMS=dist\SHA256SUMS.txt" >> $env:GITHUB_ENV
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" "$env:ZIP" "$env:INSTALLER" `
+          gh release create "${{ github.ref_name }}" "$env:ZIP" "$env:INSTALLER" "$env:CHECKSUMS" `
             --title "PDF Master ${{ github.ref_name }}" `
-            --notes "Lihat CHANGELOG.md untuk daftar perubahan lengkap."
+            --notes "Lihat CHANGELOG.md untuk daftar perubahan lengkap. Verifikasi SHA-256: bandingkan hash di dist\SHA256SUMS.txt (aset rilis) dengan file yang Anda unduh."

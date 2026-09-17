@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import urllib.error
@@ -32,6 +33,7 @@ class UpdateInfo:
     published_at: str
     notes: str
     installer: ReleaseAsset | None = None
+    checksum_asset: ReleaseAsset | None = None
 
 
 def version_tuple(value: str) -> tuple[int, ...]:
@@ -47,6 +49,40 @@ def _select_installer(assets: list[dict]) -> ReleaseAsset | None:
         if name.lower().endswith(".exe") and "setup" in name.lower():
             return ReleaseAsset(name, str(asset.get("browser_download_url") or ""), int(asset.get("size") or 0))
     return None
+
+
+def _select_checksums(assets: list[dict]) -> ReleaseAsset | None:
+    for asset in assets:
+        name = str(asset.get("name") or "")
+        if name.upper() == "SHA256SUMS.TXT":
+            return ReleaseAsset(name, str(asset.get("browser_download_url") or ""), int(asset.get("size") or 0))
+    return None
+
+
+def fetch_checksums(asset: ReleaseAsset, *, timeout: float = 15.0) -> dict[str, str]:
+    """Download a SHA256SUMS.txt asset and map each filename to its hex digest."""
+    request = urllib.request.Request(
+        asset.url, headers={"Accept": "application/octet-stream", "User-Agent": USER_AGENT.format(version="updater")}
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            content = response.read().decode("utf-8-sig", errors="replace")
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        raise RuntimeError("Could not download the release checksums.") from exc
+    checksums: dict[str, str] = {}
+    for line in content.splitlines():
+        parts = line.strip().split(None, 1)
+        if len(parts) == 2 and len(parts[0]) == 64:
+            checksums[parts[1].lstrip("*")] = parts[0].lower()
+    return checksums
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(CHUNK_SIZE), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def check_for_update(current_version: str, *, timeout: float = 8.0) -> UpdateInfo | None:
@@ -79,6 +115,7 @@ def check_for_update(current_version: str, *, timeout: float = 8.0) -> UpdateInf
         str(payload.get("published_at") or ""),
         str(payload.get("body") or "")[:1500],
         installer,
+        _select_checksums(payload.get("assets") or []),
     )
 
 
@@ -91,7 +128,12 @@ def _human_size(size: int) -> str:
 
 
 def download_release_asset(
-    asset: ReleaseAsset, destination: str | Path, *, progress: Progress | None = None, timeout: float = 180.0
+    asset: ReleaseAsset,
+    destination: str | Path,
+    *,
+    sha256: str | None = None,
+    progress: Progress | None = None,
+    timeout: float = 180.0,
 ) -> Path:
     target = Path(destination).resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -118,6 +160,11 @@ def download_release_asset(
     if asset.size and target.stat().st_size != asset.size:
         target.unlink(missing_ok=True)
         raise RuntimeError("The downloaded installer is incomplete or corrupted.")
+    if sha256 is not None and _sha256(target) != sha256.lower():
+        target.unlink(missing_ok=True)
+        raise RuntimeError(
+            "The downloaded installer failed SHA-256 verification. The file was deleted and nothing was run."
+        )
     with target.open("rb") as handle:
         if handle.read(2) != b"MZ":
             target.unlink(missing_ok=True)
@@ -125,3 +172,22 @@ def download_release_asset(
     if progress:
         progress(100, target.name)
     return target
+
+
+def download_installer(
+    update: UpdateInfo,
+    destination: str | Path,
+    *,
+    progress: Progress | None = None,
+    timeout: float = 180.0,
+) -> Path:
+    """Download and verify the release installer against its published SHA-256 checksum."""
+    if update.installer is None:
+        raise RuntimeError("No installer is available for this release.")
+    sha256: str | None = None
+    if update.checksum_asset is not None:
+        checksums = fetch_checksums(update.checksum_asset, timeout=timeout)
+        sha256 = checksums.get(update.installer.name)
+        if sha256 is None:
+            raise RuntimeError(f"The release checksum for {update.installer.name} is missing.")
+    return download_release_asset(update.installer, destination, sha256=sha256, progress=progress, timeout=timeout)

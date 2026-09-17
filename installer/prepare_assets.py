@@ -2,12 +2,44 @@
 
 from __future__ import annotations
 
+import re
 from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def version_numbers(version: str) -> tuple[int, int, int, int]:
+    parts = [int(value) for value in re.findall(r"\d+", version)][:4]
+    while len(parts) < 4:
+        parts.append(0)
+    return parts[0], parts[1], parts[2], parts[3]
+
+
+def create_version_files() -> None:
+    """Keep installer/version.iss and version_info.txt in sync with version.txt."""
+    version = (ROOT / "version.txt").read_text(encoding="utf-8").strip()
+    major, minor, patch, build = version_numbers(version)
+    filevers = f"({major},{minor},{patch},{build})"
+    version_info = (
+        "VSVersionInfo(\n"
+        f"  ffi=FixedFileInfo(filevers={filevers}, prodvers={filevers}, mask=0x3f, flags=0x0, "
+        "OS=0x40004, fileType=0x1, subtype=0x0, date=(0,0)),\n"
+        "  kids=[StringFileInfo([StringTable('040904B0', [\n"
+        "    StringStruct('CompanyName', 'Fahmikip'),\n"
+        "    StringStruct('FileDescription', 'PDF Master - All-in-One Offline PDF Toolkit'),\n"
+        f"    StringStruct('FileVersion', '{version}'),\n"
+        "    StringStruct('LegalCopyright', '\\u00a9 2026 Fahmikip'),\n"
+        "    StringStruct('ProductName', 'PDF Master'),\n"
+        f"    StringStruct('ProductVersion', '{version}'),\n"
+        "    StringStruct('Comments', 'https://github.com/fahmikip')])]),\n"
+        "    VarFileInfo([VarStruct('Translation', [1033, 1200])])]\n"
+        ")\n"
+    )
+    save_unless_same(ROOT / "installer" / "version_info.txt", version_info.encode())
+    save_unless_same(ROOT / "installer" / "version.iss", f'#define MyAppVersion "{version}"\n'.encode())
 
 
 def font(size: int, bold: bool = False):
@@ -86,6 +118,7 @@ def create_installer_images(developer: Path) -> None:
 
 
 if __name__ == "__main__":
+    create_version_files()
     create_icon()
     developer = create_developer_placeholder()
     create_installer_images(developer)

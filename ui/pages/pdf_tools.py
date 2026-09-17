@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from core.jobs.worker import FunctionWorker
-from core.pdf.compressor import CompressionResult, compress_pdf
+from core.pdf.compressor import CompressionResult, compress_pdf, find_ghostscript
 from core.pdf.merger import merge_pdfs
 from core.pdf.splitter import extract_range, split_every_n
 from core.utils.history import HistoryStore
@@ -120,6 +120,20 @@ class CompressPage(ToolPage):
         self.drop.choose_requested.connect(self.choose)
         self.drop.files_dropped.connect(self.set_files)
         row = QHBoxLayout()
+        row.addWidget(QLabel("Engine"))
+        self.engine = QComboBox()
+        self.engine.addItem("Built-in", "builtin")
+        self.engine.addItem("Lossless (qpdf)", "qpdf")
+        if find_ghostscript():
+            self.engine.addItem("Ghostscript (best for scans)", "ghostscript")
+        else:
+            self.engine.addItem("Ghostscript (install to enable)", "ghostscript")
+            self.engine.setItemData(self.engine.count() - 1, 0, Qt.ItemDataRole.UserRole - 1)
+        self.engine.setToolTip(
+            "Built-in: fast image recompression. Lossless (qpdf): object-level cleanup, no quality loss. "
+            "Ghostscript: strongest for scanned PDFs (requires Ghostscript installed)."
+        )
+        row.addWidget(self.engine, 1)
         row.addWidget(QLabel("Compression level"))
         self.level = QComboBox()
         self.level.addItems(["Low", "Recommended", "High", "Maximum"])
@@ -180,6 +194,7 @@ class CompressPage(ToolPage):
                 output,
                 self.level.currentText().lower(),
                 aggressive=self.aggressive.isChecked(),
+                engine=self.engine.currentData(),
                 with_progress=True,
             )
 

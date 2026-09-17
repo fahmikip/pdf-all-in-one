@@ -156,7 +156,10 @@ def place_image(
             height = width * ratio
             x, y = _point(page.rect, position, margin, width, height)
             page.insert_image(
-                pymupdf.Rect(x, y, x + width, y + height), filename=str(image_source), overlay=True, keep_proportion=True
+                pymupdf.Rect(x, y, x + width, y + height),
+                filename=str(image_source),
+                overlay=True,
+                keep_proportion=True,
             )
             if progress:
                 progress(round((sequence + 1) / len(selected) * 95), f"Placed image on page {index + 1}")

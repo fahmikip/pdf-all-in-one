@@ -49,6 +49,50 @@ def test_compress_and_metadata(sample_pdf: Path, tmp_path: Path) -> None:
     assert read_metadata(updated)["title"] == "Updated"
 
 
+def test_qpdf_lossless_engine_preserves_content(sample_pdf: Path, tmp_path: Path) -> None:
+    from core.pdf.compressor import qpdf_lossless
+
+    result = qpdf_lossless(sample_pdf, tmp_path / "lossless.pdf")
+    assert result.exists()
+    assert page_text(result) == ["Page 1", "Page 2", "Page 3"]
+
+
+def test_compress_pdf_with_qpdf_engine(sample_pdf: Path, tmp_path: Path) -> None:
+    result = compress_pdf(sample_pdf, tmp_path / "qpdf.pdf", "recommended", engine="qpdf")
+    assert result.compressed_size > 0
+    assert page_text(result.output) == ["Page 1", "Page 2", "Page 3"]
+
+
+def test_compress_pdf_with_ghostscript_engine_when_available(sample_pdf: Path, tmp_path: Path) -> None:
+    from core.pdf.compressor import find_ghostscript
+
+    if not find_ghostscript():
+        pytest.skip("Ghostscript is not installed")
+    result = compress_pdf(sample_pdf, tmp_path / "ghostscript.pdf", "recommended", engine="ghostscript")
+    assert result.compressed_size > 0
+    assert page_text(result.output) == ["Page 1", "Page 2", "Page 3"]
+
+
+def test_compress_pdf_rejects_unknown_level(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        compress_pdf(sample_pdf, tmp_path / "bad.pdf", "extreme")
+
+
+def test_ghostscript_engine_reports_missing_binary(sample_pdf: Path, tmp_path: Path, monkeypatch) -> None:
+    from core.pdf import compressor
+
+    monkeypatch.setattr(compressor, "find_ghostscript", lambda: None)
+    with pytest.raises(RuntimeError):
+        compressor.ghostscript_pdf(sample_pdf, tmp_path / "gs.pdf", "recommended")
+
+
+def test_find_ghostscript_returns_none_when_absent(monkeypatch) -> None:
+    from core.pdf import compressor
+
+    monkeypatch.setattr(compressor.shutil, "which", lambda name: None)
+    assert compressor.find_ghostscript() is None
+
+
 def test_image_pdf_maximum_compression_reduces_size(tmp_path: Path) -> None:
     image_path = tmp_path / "photo.bmp"
     image = Image.effect_noise((1200, 1200), 80).convert("RGB")
