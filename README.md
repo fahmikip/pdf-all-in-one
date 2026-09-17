@@ -8,7 +8,7 @@
 
 **PDF Master** adalah perangkat PDF all-in-one untuk Windows yang berjalan sepenuhnya **offline**, dibangun dengan Python 3.12 dan PySide6. Semua operasi dokumen dijalankan di komputer Anda sendiri — tidak ada yang diunggah, dan tidak ada pelacakan atau telemetri.
 
-Versi saat ini: **v1.6.0**
+Versi saat ini: **v1.6.1**
 
 ---
 
@@ -119,7 +119,7 @@ Jalankan rangkaian tes dengan `python -m pytest`.
 Itu **normal** dan bukan virus. PDF Master tidak ditandatangani dengan sertifikat EV, sehingga Windows SmartScreen belum mengenali pengembangnya. Untuk menjalankan: klik **More info** → **Run anyway**. Hindari men-download build dari sumber selain halaman **Releases** resmi.
 
 ### Antivirus tiba-tiba menandai PDFMaster.exe
-Karena aplikasi ini dikemas dengan **PyInstaller** (bundling Python + pustaka ke satu `.exe`), beberapa antivirus terkadang melaporkan *false positive*. Jika yakin file berasal dari halaman **Releases** resmi, tambahkan pengecualian di antivirus Anda. Anda juga bisa membandingkan *checksum* sha256 yang tercantum di rilis.
+Karena aplikasi ini dikemas dengan **PyInstaller** (bundling Python + pustaka ke satu `.exe`), beberapa antivirus terkadang melaporkan *false positive*. Build **v1.6.1+** sudah mematikan kompresi **UPX** yang sering memicu heuristik antivirus, sehingga deteksi palsu berkurang drastis. Jika masih terdeteksi: pastikan file berasal dari halaman **Releases** resmi, bandingkan *checksum* sha256 yang tercantum di rilis, dan tambahkan pengecualian di antivirus Anda.
 
 ### Apakah perlu LibreOffice / Tesseract?
 Tidak wajib. Keduanya **opsional** dan hanya dibutuhkan bila Anda ingin:

@@ -4,6 +4,11 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-09-17
+
+### Diperbaiki
+- *False positive* antivirus saat instalasi/memperbarui: matikan **kompresi UPX** pada build PyInstaller yang sering memicu heuristik tanda-tangan palsu.
+
 ## [1.6.0] - 2026-09-17
 
 ### Ditambahkan
@@ -76,6 +81,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan v
 - Pemrosesan batch dan **Riwayat** lokal tanpa isi dokumen.
 - Kompresi PDF adaptif dengan profil Rendah / Disarankan / Tinggi / Maksimum.
 
+[1.6.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.1
 [1.6.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.0
 [1.5.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.1
 [1.5.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.0

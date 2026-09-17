@@ -21,9 +21,11 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    # UPX-packed executables frequently trip antivirus heuristics (false positives).
+    # Keep UPX disabled so Defender / other AVs stop flagging the bundled launcher.
+    upx=False,
     console=False,
     icon=str(icon) if icon.exists() else None,
     version=str(root / "installer" / "version_info.txt"),
 )
-coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=True, name="PDF-Master")
+coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="PDF-Master")
