@@ -23,5 +23,8 @@ def test_main_window_starts() -> None:
     assert window.pages["settings"].__class__.__name__ == "SettingsPage"
     assert window.pages["ocr"].__class__.__name__ == "OcrPage"
     assert window.pages["batch"].__class__.__name__ == "BatchPage"
+    assert window.pages["layout"].__class__.__name__ == "PrintLayoutPage"
+    assert window.pages["pages"].__class__.__name__ == "PageToolsPage"
+    assert window.pages["repair"].__class__.__name__ == "RepairPage"
     window.close()
     app.quit()

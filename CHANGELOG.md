@@ -4,9 +4,13 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.6.0] - 2026-09-17
 
 ### Ditambahkan
+- **Print Layout**: susun 2–16 halaman per lembar (N-up) dan cetakan **booklet lipat-tengah** yang siap dicetak bolak-balik.
+- **Page Tools**: hapus halaman kosong otomatis, ubah ukuran halaman ke standar (A4/A3/A5/Letter/Legal) dengan mode Fit/Fill/Stretch dan margin, serta membuat **PDF kosong baru** dari template.
+- **Repair & Optimize**: perbaiki PDF rusak (qpdf/pikepdf/PyMuPDF) dan buat salinan **Fast Web View (linearize)** untuk pemuatan cepat daring.
+- **Tanda tangan tulisan tangan** di PDF Forms & Signature: gambar tanda tangan dengan mouse/touchscreen lalu sisipkan ke PDF.
 - Verifikasi **SHA-256** untuk installer hasil unduhan; rilis kini menyertakan aset `SHA256SUMS.txt` dan pengunduh menolak file yang tidak cocok.
 - Mesin kompresi baru: **Lossless (qpdf/pikepdf)** dan **Ghostscript**, dapat dipilih di halaman Kompres PDF.
 - Langkah **code signing** opsional (Azure Trusted Signing) pada workflow rilis.
@@ -72,6 +76,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan v
 - Pemrosesan batch dan **Riwayat** lokal tanpa isi dokumen.
 - Kompresi PDF adaptif dengan profil Rendah / Disarankan / Tinggi / Maksimum.
 
+[1.6.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.0
 [1.5.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.1
 [1.5.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.0
 [1.4.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.4.0

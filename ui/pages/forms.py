@@ -12,6 +12,7 @@ from core.utils.validation import validate_pdf
 from PySide6.QtCore import QThreadPool, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QHBoxLayout,
@@ -27,6 +28,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from ui.widgets.signature_pad import SignaturePad
 
 SIGN_WIDTH = 200.0
 SIGN_HEIGHT = 70.0
@@ -100,6 +103,21 @@ class FormsPage(QWidget):
         image_row.addWidget(self.image_label, 1)
         image_row.addWidget(choose)
         box.addLayout(image_row)
+        self.draw_toggle = QCheckBox("Draw signature with mouse / touch")
+        self.draw_toggle.setToolTip("Sketch your signature on the pad below instead of importing an image.")
+        self.draw_toggle.toggled.connect(self.toggle_draw)
+        box.addWidget(self.draw_toggle)
+        pad_row = QHBoxLayout()
+        self.pad = SignaturePad()
+        pad_row.addWidget(self.pad, 1)
+        clear_pad = QPushButton("Clear")
+        clear_pad.setObjectName("ghost")
+        clear_pad.clicked.connect(self.pad.clear)
+        pad_row.addWidget(clear_pad)
+        self.pad_row = pad_row
+        clear_pad.setVisible(False)
+        self.pad.setVisible(False)
+        box.addLayout(pad_row)
         controls = QHBoxLayout()
         self.page = QSpinBox()
         self.page.setRange(1, 999)
@@ -177,6 +195,22 @@ class FormsPage(QWidget):
         self.image = Path(name)
         self.image_label.setText(self.image.name)
 
+    def toggle_draw(self, checked: bool) -> None:
+        self.pad.setVisible(checked)
+        self.pad_row.itemAt(1).widget().setVisible(checked)
+        chosen = getattr(self, "image", None)
+        self.image_label.setText(
+            "Draw your signature on the pad below" if checked else (chosen.name if chosen else "No signature image chosen")
+        )
+
+    def _signature_source(self) -> Path | None:
+        if self.draw_toggle.isChecked():
+            if self.pad.is_empty():
+                QMessageBox.information(self, "Sign the pad", "Draw your signature first.")
+                return None
+            return self.pad.png_path()
+        return getattr(self, "image", None)
+
     def _updates(self) -> dict[str, object]:
         updates: dict[str, object] = {}
         for row in range(self.fields.rowCount()):
@@ -213,9 +247,9 @@ class FormsPage(QWidget):
         if not self.source:
             QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
             return
-        image = getattr(self, "image", None)
+        image = self._signature_source()
         if image is None and not self.name.text() and not self.role.text():
-            QMessageBox.information(self, "Signature required", "Choose a signature image or enter a signer name.")
+            QMessageBox.information(self, "Signature required", "Choose or draw a signature, or enter a signer name.")
             return
         output, _ = QFileDialog.getSaveFileName(
             self, "Save signed PDF", str(self.source.with_name(f"{self.source.stem}_signed.pdf")), "PDF files (*.pdf)"

@@ -8,7 +8,7 @@
 
 **PDF Master** adalah perangkat PDF all-in-one untuk Windows yang berjalan sepenuhnya **offline**, dibangun dengan Python 3.12 dan PySide6. Semua operasi dokumen dijalankan di komputer Anda sendiri — tidak ada yang diunggah, dan tidak ada pelacakan atau telemetri.
 
-Versi saat ini: **v1.5.1**
+Versi saat ini: **v1.6.0**
 
 ---
 
@@ -29,12 +29,17 @@ Versi saat ini: **v1.5.1**
 | Alat PDF | Pecah PDF | Pecah per halaman, setiap N halaman, atau rentang tertentu (mis. `1-3, 5`) |
 | Alat PDF | Susun PDF | Urut ulang, putar, dan hapus halaman |
 | Alat PDF | Ekstrak PDF | Ekspor teks ke `.txt` atau gambar tertanam ke PNG / JPG / WEBP |
+| Alat PDF | Print Layout | Susun 2–16 halaman per lembar (N-up) atau buat **booklet lipat-tengah** siap cetak bolak-balik |
 | Konversi | Konversi File | Gambar→PDF, PDF→JPG/PNG/WebP, Word/Excel/PowerPoint→PDF (LibreOffice), PDF→Word, PDF→Excel |
 | Edit | Watermark & Lainnya | Watermark teks/gambar, nomor halaman, header & footer, edit metadata, **Insert & Edit** (letakkan foto, geser, ubah ukuran, tambah teks dengan pilihan font, ukuran & warna) |
-| Edit | PDF Forms & Signature | Isi formulir PDF interaktif (teks/centang), tambah tanda tangan visual (gambar + nama) |
+| Edit | PDF Forms & Signature | Isi formulir PDF interaktif (teks/centang), tambah tanda tangan visual (gambar + nama) atau **gambar tanda tangan langsung dengan mouse/touchscreen** |
 | Keamanan | Lindungi / Buka Kunci | Proteksi kata sandi PDF dan buka kunci resmi |
 | OCR | OCR PDF / Gambar | Buat hasil scan dapat dicari (memerlukan Tesseract) |
 | Lanjutan | Proses Batch | Jalankan operasi yang sama untuk banyak file sekaligus |
+| Lanjutan | Hapus Halaman Kosong | Deteksi dan hapus halaman blank (tanpa teks/gambar/vektor) sekaligus |
+| Lanjutan | Ubah Ukuran Halaman | Fit / Fill / Stretch ke ukuran standar (A4, A3, A5, Letter, Legal) dengan margin |
+| Lanjutan | PDF Baru | Buat dokumen kosong baru dari template ukuran standar |
+| Lanjutan | Perbaiki & Optimalkan | Perbaiki PDF rusak (qpdf/pikepdf) dan ubah ke **Fast Web View (linearize)** agar cepat dibuka saat daring |
 | Lainnya | Riwayat | Riwayat operasi lokal tanpa isi dokumen, lengkap dengan statistik penyimpanan |
 | Lainnya | Pengaturan | Preferensi, deteksi LibreOffice / Tesseract, pemeriksaan pembaruan dengan unduh & pasang installer (selalu dengan izin Anda) |
 | Lainnya | Tentang Developer | Informasi developer dan versi |
@@ -95,6 +100,18 @@ Jalankan rangkaian tes dengan `python -m pytest`.
 
 11. **Editor objek (Insert & Edit)**
     Pilih **Edit PDF** → tab *Insert & Edit* → pilih PDF → **Add Image** untuk foto (JPEG/JPG/PNG) atau **Add Text** untuk teks. Geser objek untuk memindah posisi, tarik titik sudut untuk mengubah ukuran gambar, pilih font/ukuran/warna di panel, pilih halaman, lalu **Save PDF**.
+
+12. **Tanda tangan tulisan tangan**
+    Pilih **PDF Forms & Signature** → tab *Sign Document* → centang **Draw signature with mouse / touch** → gambarlah tanda tangan di papan → pilih halaman & posisi → **Sign PDF**.
+
+13. **Print layout & booklet**
+    Pilih **Print Layout** → pilih PDF → atur *Pages per sheet* (2–16) atau centang *Booklet (fold)* → **Create Layout**. Cetak hasilnya bolak-balik dan lipat agar menjadi buklet.
+
+14. **Hapus halaman kosong / ubah ukuran / PDF baru**
+    Pilih **Page Tools**. Tab *Remove Blank Pages* untuk membuang halaman blank, tab *Resize Pages* untuk menyetel ulang ke ukuran standar, atau tab *New PDF* untuk membuat dokumen kosong.
+
+15. **Perbaiki & Fast Web View**
+    Pilih **Repair & Optimize** → tab *Repair PDF* untuk memulihkan file rusak, atau tab *Fast Web View* untuk membuat salinan yang termuat cepat di browser.
 
 ## FAQ
 

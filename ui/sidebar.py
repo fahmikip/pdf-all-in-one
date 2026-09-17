@@ -9,6 +9,7 @@ from ui.icons import icon
 
 SECTION_COLORS = {
     "PDF TOOLS": "#4F46E5",
+    "PAGE TOOLS": "#16A34A",
     "CONVERT": "#0D9488",
     "EDIT": "#D97706",
     "SECURITY": "#E11D48",
@@ -62,12 +63,14 @@ class Sidebar(QFrame):
                 ("split", "Split PDF"),
                 ("organize", "Organize PDF"),
                 ("extract", "Extract PDF"),
+                ("layout", "Print Layout"),
             ],
+            "PAGE TOOLS": [("pages", "Page Tools")],
             "CONVERT": [("convert", "Convert Files")],
             "EDIT": [("edit", "Watermark & More"), ("forms", "PDF Forms & Sign")],
             "SECURITY": [("security", "Protect / Unlock")],
             "OCR": [("ocr", "OCR PDF / Image")],
-            "ADVANCED": [("batch", "Batch Processing")],
+            "ADVANCED": [("batch", "Batch Processing"), ("repair", "Repair & Optimize")],
             "MORE": [("history", "History"), ("settings", "Settings"), ("about", "About Developer")],
         }
         for heading, entries in groups.items():

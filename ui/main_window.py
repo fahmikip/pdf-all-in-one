@@ -20,10 +20,13 @@ from ui.pages.extract import ExtractPage
 from ui.pages.forms import FormsPage
 from ui.pages.history import HistoryPage
 from ui.pages.home import HomePage
+from ui.pages.impose import PrintLayoutPage
 from ui.pages.ocr import OcrPage
 from ui.pages.organizer import OrganizerPage
+from ui.pages.pages import PageToolsPage
 from ui.pages.pdf_tools import CompressPage, MergePage, SplitPage
 from ui.pages.placeholder import PlaceholderPage
+from ui.pages.repair import RepairPage
 from ui.pages.security import SecurityPage
 from ui.pages.settings import SettingsPage
 from ui.sidebar import Sidebar
@@ -61,6 +64,9 @@ class MainWindow(QMainWindow):
             "ocr": OcrPage(),
             "extract": ExtractPage(),
             "batch": BatchPage(settings.default_compression),
+            "layout": PrintLayoutPage(),
+            "pages": PageToolsPage(),
+            "repair": RepairPage(),
         }
         labels = {}
         for key, title in labels.items():

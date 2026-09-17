@@ -41,6 +41,9 @@ class HomePage(QScrollArea):
             ("organize", "Organize PDF", "Reorder, rotate, remove", "violet", "#7C3AED"),
             ("ocr", "OCR PDF", "Make scans searchable", "rose", "#E11D48"),
             ("extract", "Extract PDF", "Pull out text and images", "teal", "#0D9488"),
+            ("layout", "Print Layout", "N-up sheets and booklets", "indigo", "#4F46E5"),
+            ("pages", "Page Tools", "Blank pages, resize, new PDF", "emerald", "#059669"),
+            ("repair", "Repair PDF", "Fix damaged documents", "amber", "#D97706"),
         ]
         for index, (key, name, description, accent, color) in enumerate(actions):
             card = QFrame()

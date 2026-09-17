@@ -25,6 +25,9 @@ PATHS = {
     "extract": '<path d="M12 3v10M8 9l4 4 4-4M4 15v6h16v-6"/><path d="M8 18h8"/>',
     "app": '<path d="M6 2h9l5 5v15H6Z"/><path d="M15 2v6h6M9 13h8M9 17h6"/>',
     "forms": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h5M7 12h10M7 16h7"/><path d="M16.5 15.5v-4M14.5 13.5h4"/>',
+    "layout": '<path d="M6 9V3h12v6M6 21v-6h12v6"/><rect x="3" y="9" width="18" height="6" rx="1"/><path d="M17 11.5h.01"/>',
+    "pages": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/>',
+    "repair": '<path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6l-3.2 3.2-3-3Z"/><path d="m20 4 3 3M14.5 6 18 9.5"/>',
 }
 
 
