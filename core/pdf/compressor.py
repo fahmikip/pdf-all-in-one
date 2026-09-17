@@ -33,30 +33,49 @@ class CompressionResult:
 
 
 def _recompress_images(document: pymupdf.Document, level: str) -> int:
-    """Replace suitable embedded images with smaller JPEG streams."""
+    """Replace suitable embedded images with smaller JPEG streams.
+
+    Streams are rewritten in place on their existing xref so the image
+    object is never duplicated and ``/ColorSpace`` stays consistent.
+    """
     quality = {"low": 90, "recommended": 75, "high": 55, "maximum": 35}[level]
     processed: set[int] = set()
+    soft_masks: set[int] = set()
+    for page in document:
+        for image_info in page.get_images(full=True):
+            if len(image_info) > 1 and image_info[1]:
+                soft_masks.add(image_info[1])
     replaced = 0
     for page in document:
         for image_info in page.get_images(full=True):
             xref = image_info[0]
-            if xref in processed:
+            if xref in processed or xref in soft_masks:
                 continue
             processed.add(xref)
             try:
                 extracted = document.extract_image(xref)
                 original = extracted.get("image", b"")
-                if len(original) < 16_384:
+                if extracted.get("smask") or len(original) < 16_384:
                     continue
                 with Image.open(BytesIO(original)) as image:
-                    if image.mode in {"RGBA", "LA"} or "transparency" in image.info:
+                    if image.mode in {"RGBA", "LA", "CMYK"} or "transparency" in image.info:
                         continue
-                    converted = image.convert("RGB")
+                    if image.mode in {"L", "P"} and document.xref_get_key(xref, "ColorSpace")[0] != "name":
+                        continue
+                    if image.mode == "L" or (
+                        image.mode == "P" and image.palette.mode == "L" if image.palette else False
+                    ):
+                        converted, target_space = image.convert("L"), "DeviceGray"
+                    else:
+                        converted, target_space = image.convert("RGB"), "DeviceRGB"
                     buffer = BytesIO()
                     converted.save(buffer, "JPEG", quality=quality, optimize=True, progressive=True)
                     candidate = buffer.getvalue()
                 if len(candidate) + 1024 < len(original):
-                    page.replace_image(xref, stream=candidate)
+                    document.update_stream(xref, candidate, compress=False)
+                    colorspace = document.xref_get_key(xref, "ColorSpace")
+                    if colorspace[0] == "name" and colorspace[1] != f"/{target_space}":
+                        document.xref_set_key(xref, "ColorSpace", f"/{target_space}")
                     replaced += 1
             except (OSError, RuntimeError, ValueError):
                 continue

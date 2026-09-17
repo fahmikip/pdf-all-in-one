@@ -108,6 +108,23 @@ def test_image_pdf_maximum_compression_reduces_size(tmp_path: Path) -> None:
         assert document.page_count == 1
 
 
+def test_compression_does_not_duplicate_or_return_identical_jpeg_pdf(tmp_path: Path) -> None:
+    image_path = tmp_path / "photo.jpg"
+    Image.effect_noise((1600, 1100), 60).convert("RGB").save(image_path, quality=92)
+    source = tmp_path / "photo.pdf"
+    with pymupdf.open() as document:
+        page = document.new_page(width=595, height=842)
+        page.insert_image(page.rect, filename=str(image_path))
+        document.save(source)
+    for level in ("low", "recommended"):
+        result = compress_pdf(source, tmp_path / f"photo_{level}.pdf", level)
+        assert result.output.read_bytes() != source.read_bytes(), "output must not be a byte copy of the input"
+        assert result.compressed_size < result.original_size, f"{level} compression must reduce size"
+        with pymupdf.open(result.output) as document:
+            images = [info for info in document[0].get_images(full=True) if not info[1]]
+            assert len(images) == 1, "image object must not be duplicated"
+
+
 def test_aggressive_compression_produces_valid_smaller_pdf(tmp_path: Path) -> None:
     source = tmp_path / "large_scan.pdf"
     bitmap = tmp_path / "large_scan.bmp"

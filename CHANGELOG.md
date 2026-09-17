@@ -4,6 +4,12 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.3] - 2026-09-17
+
+### Diperbaiki
+- Kompres PDF dengan mesin **Built-in** pada level **Low / Recommended** tidak menyusutkan file (hasil identik dengan file asli). Akar masalah: `Page.replace_image()` menggandakan objek gambar, sehingga file hasil justru lebih besar dan mekanisme pengaman menyalin file asli. Gambar kini ditimpa langsung pada xref-nya tanpa duplikasi objek, dengan penanganan *color space* (DeviceRGB/DeviceGray/ICCBased) yang benar dan perlindungan gambar transparan (soft-mask) serta CMYK.
+- Hasil verifikasi semua level (Low/Recommended/High/Maximum) pada PDF foto, hasil scan abu-abu, PNG transparan, CMYK, dokumen teks, dan dokumen campuran: ukuran berkurang (hingga 90%) tanpa kehilangan teks/halaman, dan gambar transparan dirender sama persis.
+
 ## [1.6.2] - 2026-09-17
 
 ### Ditambahkan
@@ -92,6 +98,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan v
 - Pemrosesan batch dan **Riwayat** lokal tanpa isi dokumen.
 - Kompresi PDF adaptif dengan profil Rendah / Disarankan / Tinggi / Maksimum.
 
+[1.6.3]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.3
 [1.6.2]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.2
 [1.6.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.1
 [1.6.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.0
