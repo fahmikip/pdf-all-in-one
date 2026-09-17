@@ -6,7 +6,7 @@ from core.pdf.compressor import compress_pdf
 from core.pdf.merger import merge_pdfs
 from core.pdf.metadata import read_metadata, write_metadata
 from core.pdf.page_manager import PageSpec, organize_pages, remove_pages, reorder_pages, rotate_pages
-from core.pdf.splitter import extract_range, split_every_n
+from core.pdf.splitter import extract_pages, extract_range, split_every_n
 from PIL import Image
 
 
@@ -148,3 +148,60 @@ def test_organize_pages_supports_duplicates_and_rotation(sample_pdf: Path, tmp_p
     assert page_text(output) == ["Page 3", "Page 1", "Page 3"]
     with pymupdf.open(output) as document:
         assert [page.rotation for page in document] == [90, 0, 180]
+
+
+def test_merge_requires_at_least_two_files(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        merge_pdfs([sample_pdf], tmp_path / "merged.pdf")
+
+
+def test_merge_rejects_non_pdf_output(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        merge_pdfs([sample_pdf, sample_pdf], tmp_path / "merged.txt")
+
+
+def test_merge_output_must_not_match_input(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        merge_pdfs([sample_pdf, sample_pdf], sample_pdf)
+
+
+def test_extract_pages_rejects_empty_or_out_of_range(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        extract_pages(sample_pdf, tmp_path / "empty.pdf", [])
+    with pytest.raises(ValueError):
+        extract_pages(sample_pdf, tmp_path / "out.pdf", [9])
+
+
+def test_split_every_n_rejects_zero_pages_per_file(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        split_every_n(sample_pdf, tmp_path, 0)
+
+
+def test_organize_pages_rejects_empty_selection(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        organize_pages(sample_pdf, tmp_path / "out.pdf", [])
+
+
+def test_organize_pages_rejects_out_of_range(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        organize_pages(sample_pdf, tmp_path / "out.pdf", [PageSpec(9)])
+
+
+def test_organize_pages_rejects_non_90_rotation(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        organize_pages(sample_pdf, tmp_path / "out.pdf", [PageSpec(0, 45)])
+
+
+def test_reorder_pages_rejects_empty_order(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        reorder_pages(sample_pdf, tmp_path / "out.pdf", [])
+
+
+def test_rotate_pages_rejects_invalid_degrees(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        rotate_pages(sample_pdf, tmp_path / "out.pdf", [0], 45)
+
+
+def test_rotate_pages_rejects_empty_selection(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        rotate_pages(sample_pdf, tmp_path / "out.pdf", [], 90)

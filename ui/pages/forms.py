@@ -200,7 +200,9 @@ class FormsPage(QWidget):
         self.pad_row.itemAt(1).widget().setVisible(checked)
         chosen = getattr(self, "image", None)
         self.image_label.setText(
-            "Draw your signature on the pad below" if checked else (chosen.name if chosen else "No signature image chosen")
+            "Draw your signature on the pad below"
+            if checked
+            else (chosen.name if chosen else "No signature image chosen")
         )
 
     def _signature_source(self) -> Path | None:

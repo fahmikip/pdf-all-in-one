@@ -14,9 +14,13 @@ Versi saat ini: **v1.6.1**
 
 ## Tangkapan Layar
 
-| Beranda | Kompres PDF | Pengaturan |
+| Beranda | Kompres PDF | Print Layout |
 | --- | --- | --- |
-| ![Beranda](docs/screenshots/home.png) | ![Kompres PDF](docs/screenshots/compress.png) | ![Pengaturan](docs/screenshots/settings.png) |
+| ![Beranda](docs/screenshots/home.png) | ![Kompres PDF](docs/screenshots/compress.png) | ![Print Layout](docs/screenshots/layout.png) |
+
+| Page Tools | Repair & Optimize | Pengaturan |
+| --- | --- | --- |
+| ![Page Tools](docs/screenshots/pages.png) | ![Repair & Optimize](docs/screenshots/repair.png) | ![Pengaturan](docs/screenshots/settings.png) |
 
 ---
 

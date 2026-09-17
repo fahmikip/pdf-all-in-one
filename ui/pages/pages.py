@@ -25,7 +25,9 @@ from ui.pages.pdf_tools import ToolPage
 
 class PageToolsPage(ToolPage):
     def __init__(self) -> None:
-        super().__init__("Page Tools", "Clean up blank pages, re-fit pages to standard sizes, or start a new document.")
+        super().__init__(
+            "Page Tools", "Clean up blank pages, re-fit pages to standard sizes, or start a new document."
+        )
         self.sources: dict[str, Path | None] = {"blank": None, "resize": None}
         self.source_pages: dict[str, int] = {}
         self.action: tuple[str, str] = ("", "")
@@ -171,7 +173,9 @@ class PageToolsPage(ToolPage):
             QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
             return
         output, _ = QFileDialog.getSaveFileName(
-            self, "Save resized PDF", str(source.with_name(f"{source.stem}_{self.target_size.currentText().replace(' ', '_')}.pdf")),
+            self,
+            "Save resized PDF",
+            str(source.with_name(f"{source.stem}_{self.target_size.currentText().replace(' ', '_')}.pdf")),
             "PDF files (*.pdf)",
         )
         if not output:
@@ -217,6 +221,7 @@ class PageToolsPage(ToolPage):
             removed = 0
             try:
                 import pymupdf
+
                 with pymupdf.open(str(output)) as check:
                     removed = self.source_pages.get("blank", 0) - check.page_count
             except Exception:

@@ -89,3 +89,24 @@ def test_repair_pymupdf_fallback(sample_pdf: Path, tmp_path: Path, monkeypatch) 
     result = repair_pdf(sample_pdf, tmp_path / "fixed.pdf")
     with pymupdf.open(result) as document:
         assert document.page_count == 3
+
+
+def test_linearize_rejects_non_pdf_output(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        linearize_pdf(sample_pdf, tmp_path / "web.txt")
+
+
+def test_repair_rejects_non_pdf_source(tmp_path: Path) -> None:
+    text = tmp_path / "notes.txt"
+    text.write_text("hello", encoding="utf-8")
+    with pytest.raises(ValidationError):
+        repair_pdf(text, tmp_path / "out.pdf")
+
+
+def test_repair_reports_progress(sample_pdf: Path, tmp_path: Path) -> None:
+    progress: list[int] = []
+    result = repair_pdf(
+        _damaged_pdf(sample_pdf, tmp_path), tmp_path / "fixed.pdf", progress=lambda value, _d: progress.append(value)
+    )
+    assert result.exists()
+    assert progress and progress[-1] == 100

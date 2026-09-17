@@ -1,8 +1,17 @@
 from pathlib import Path
 
+import pikepdf
 import pymupdf
 import pytest
 from core.pdf.pages import PAGE_SIZES, create_blank_pdf, detect_blank_pages, remove_blank_pages, resize_pages
+
+
+def _protected_pdf(sample_pdf: Path, tmp_path: Path) -> Path:
+    target = tmp_path / "protected.pdf"
+    pdf = pikepdf.open(sample_pdf)
+    pdf.save(target, encryption=pikepdf.Encryption(owner="o", user="u", R=6, aes=True))
+    pdf.close()
+    return target
 
 
 def _mixed_blank_pdf(tmp_path: Path) -> Path:
@@ -98,3 +107,33 @@ def test_create_blank_pdf(tmp_path: Path) -> None:
 def test_create_blank_pdf_rejects_zero_pages(tmp_path: Path) -> None:
     with pytest.raises(ValueError):
         create_blank_pdf(tmp_path / "new.pdf", pages=0)
+
+
+def test_create_blank_pdf_rejects_unknown_size(tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        create_blank_pdf(tmp_path / "new.pdf", page_size="Z4")
+
+
+def test_remove_blank_pages_rejects_non_pdf_output(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        remove_blank_pages(sample_pdf, tmp_path / "clean.txt")
+
+
+def test_resize_pages_rejects_non_pdf_output(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        resize_pages(sample_pdf, tmp_path / "out.txt")
+
+
+def test_resize_pages_rejects_invalid_mode(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        resize_pages(sample_pdf, tmp_path / "out.pdf", mode="Zoom")
+
+
+def test_blank_page_functions_reject_encrypted_pdf(sample_pdf: Path, tmp_path: Path) -> None:
+    protected = _protected_pdf(sample_pdf, tmp_path)
+    with pytest.raises(ValueError):
+        detect_blank_pages(protected)
+    with pytest.raises(ValueError):
+        remove_blank_pages(protected, tmp_path / "out.pdf")
+    with pytest.raises(ValueError):
+        resize_pages(protected, tmp_path / "out.pdf")

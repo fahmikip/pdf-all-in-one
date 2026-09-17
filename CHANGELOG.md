@@ -4,6 +4,14 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Ditambahkan
+- Screenshot README untuk halaman **Print Layout**, **Page Tools**, dan **Repair & Optimize** (digenerate headless).
+
+### Diubah
+- Kualitas kode: ambang **coverage dinaikkan ke 90%** (sebelumnya 85%) dan kini dijamin CI melalui `fail_under = 90`; ~40 baris baru diuji (validasi input, progress callback, jalur error).
+
 ## [1.6.1] - 2026-09-17
 
 ### Diperbaiki

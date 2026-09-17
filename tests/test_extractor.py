@@ -75,3 +75,44 @@ def test_extract_images_none_found(sample_pdf: Path, tmp_path: Path) -> None:
         raise AssertionError("expected ValueError")
     except ValueError:
         pass
+
+
+def test_extract_text_with_progress(sample_pdf: Path, tmp_path: Path) -> None:
+    progress: list[int] = []
+    output = extract_text(
+        sample_pdf, tmp_path / "text.txt", page_range="2-3", progress=lambda v, _d: progress.append(v)
+    )
+    assert output.exists()
+    assert progress and progress[-1] == 100
+
+
+def test_extract_images_rejects_bad_format(sample_pdf: Path, tmp_path: Path) -> None:
+    try:
+        extract_images(sample_pdf, tmp_path / "export", image_format="bmp")
+        raise AssertionError("expected ValueError")
+    except ValueError:
+        pass
+
+
+def test_extract_images_rejects_negative_min_size(sample_pdf: Path, tmp_path: Path) -> None:
+    try:
+        extract_images(sample_pdf, tmp_path / "export", min_size=-1)
+        raise AssertionError("expected ValueError")
+    except ValueError:
+        pass
+
+
+def test_extract_images_with_progress(tmp_path: Path) -> None:
+    pdf = tmp_path / "images.pdf"
+    document = pymupdf.open()
+    page = document.new_page(width=300, height=400)
+    image_path = tmp_path / "photo.png"
+    Image.new("RGB", (200, 150), (10, 80, 160)).save(image_path)
+    page.insert_image(pymupdf.Rect(50, 50, 250, 200), filename=str(image_path))
+    document.save(pdf)
+    document.close()
+
+    progress: list[int] = []
+    outputs = extract_images(pdf, tmp_path / "export", progress=lambda v, _d: progress.append(v))
+    assert len(outputs) == 1
+    assert progress and progress[-1] == 100

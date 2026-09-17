@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pikepdf
 import pymupdf
 import pytest
 from core.pdf.security import password_strength, protect_pdf, unlock_pdf
@@ -30,3 +31,39 @@ def test_wrong_password_is_rejected(sample_pdf: Path, tmp_path: Path) -> None:
 def test_password_strength() -> None:
     assert password_strength("abc")[1] == "Weak"
     assert password_strength("Long-Strong-Password-42")[1] == "Strong"
+
+
+def test_protect_pdf_rejects_empty_password(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        protect_pdf(sample_pdf, tmp_path / "out.pdf", "")
+
+
+def test_protect_pdf_rejects_overlong_password(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        protect_pdf(sample_pdf, tmp_path / "out.pdf", "x" * 128)
+
+
+def test_protect_pdf_rejects_already_protected_source(sample_pdf: Path, tmp_path: Path) -> None:
+    protected = tmp_path / "source.pdf"
+    pdf = pikepdf.open(sample_pdf)
+    pdf.save(protected, encryption=pikepdf.Encryption(owner="o", user="u", R=6, aes=True))
+    pdf.close()
+    with pytest.raises(ValidationError):
+        protect_pdf(protected, tmp_path / "out.pdf", "fresh-password")
+
+
+def test_unlock_pdf_rejects_unprotected_source(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValidationError):
+        unlock_pdf(sample_pdf, tmp_path / "out.pdf", "some-password")
+
+
+def test_unlock_pdf_rejects_empty_password(sample_pdf: Path, tmp_path: Path) -> None:
+    protected = protect_pdf(sample_pdf, tmp_path / "protected.pdf", "my-secret")
+    with pytest.raises(ValueError):
+        unlock_pdf(protected, tmp_path / "out.pdf", "")
+
+
+def test_validate_pdf_rejects_wrong_password(sample_pdf: Path, tmp_path: Path) -> None:
+    protected = protect_pdf(sample_pdf, tmp_path / "protected.pdf", "my-secret")
+    with pytest.raises(ValidationError):
+        validate_pdf(protected, password="wrong-secret")

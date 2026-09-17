@@ -62,7 +62,9 @@ def test_booklet_pads_odd_counts(tmp_path: Path) -> None:
 
 def test_progress_callback_reaches_100(sample_pdf: Path, tmp_path: Path) -> None:
     progress: list[int] = []
-    impose_pages(sample_pdf, tmp_path / "p.pdf", pages_per_sheet=2, progress=lambda value, _detail: progress.append(value))
+    impose_pages(
+        sample_pdf, tmp_path / "p.pdf", pages_per_sheet=2, progress=lambda value, _detail: progress.append(value)
+    )
     assert progress[-1] == 100
 
 
@@ -74,3 +76,21 @@ def test_invalid_pages_per_sheet_raises(sample_pdf: Path, tmp_path: Path) -> Non
 def test_destination_must_be_new_file(sample_pdf: Path) -> None:
     with pytest.raises(ValueError):
         impose_pages(sample_pdf, sample_pdf, pages_per_sheet=2)
+
+
+def test_impose_rejects_non_pdf_output(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        impose_pages(sample_pdf, tmp_path / "out.txt")
+
+
+def test_impose_rejects_negative_margin(sample_pdf: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        impose_pages(sample_pdf, tmp_path / "out.pdf", margin=-1)
+
+
+def test_impose_supports_full_grid_options(tmp_path: Path) -> None:
+    source = _multi_pdf(tmp_path, pages=10)
+    for pages_per_sheet in (1, 6, 8, 9, 16):
+        result = impose_pages(source, tmp_path / f"{pages_per_sheet}.pdf", pages_per_sheet=pages_per_sheet)
+        with pymupdf.open(result) as document:
+            assert document.page_count >= 1

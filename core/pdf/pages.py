@@ -138,9 +138,7 @@ def resize_pages(
         for index, page in enumerate(document):
             result.new_page(width=width, height=height)
             target_page = result[-1]
-            rect, clip, keep = _resize_geometry(
-                width, height, page.rect.width, page.rect.height, mode, margin
-            )
+            rect, clip, keep = _resize_geometry(width, height, page.rect.width, page.rect.height, mode, margin)
             target_page.show_pdf_page(
                 rect,
                 document,

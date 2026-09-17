@@ -22,6 +22,9 @@ OUT_DIR = ROOT / "docs" / "screenshots"
 PAGES = {
     "home": "Beranda",
     "compress": "Kompres PDF",
+    "layout": "Print Layout",
+    "pages": "Page Tools",
+    "repair": "Repair & Optimize",
     "settings": "Pengaturan",
 }
 

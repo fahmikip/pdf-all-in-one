@@ -72,8 +72,7 @@ class RepairPage(ToolPage):
         run.clicked.connect(self.start_linearize)
         box.addWidget(run)
         hint = QLabel(
-            "Linearized (Fast Web View) files display page by page while downloading, "
-            "perfect for sharing online."
+            "Linearized (Fast Web View) files display page by page while downloading, perfect for sharing online."
         )
         hint.setObjectName("muted")
         box.addWidget(hint)
