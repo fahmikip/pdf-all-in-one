@@ -9,6 +9,9 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan v
 ### Ditambahkan
 - Screenshot README untuk halaman **Print Layout**, **Page Tools**, dan **Repair & Optimize** (digenerate headless).
 
+### Diperbaiki
+- Screenshot README kini merender font sistem dengan benar: platform offscreen sebelumnya punya basis data font kosong sehingga teks khusus (`→`, `↶`, `↷`, `—`, `…`) tampil sebagai kotak-kotak. Script screenshot kini mendaftarkan font sistem (338 berkas) dan memakai `Segoe UI`.
+
 ### Diubah
 - Kualitas kode: ambang **coverage dinaikkan ke 90%** (sebelumnya 85%) dan kini dijamin CI melalui `fail_under = 90`; ~40 baris baru diuji (validasi input, progress callback, jalur error).
 
