@@ -4,7 +4,7 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.6.2] - 2026-09-17
 
 ### Ditambahkan
 - Screenshot README untuk halaman **Print Layout**, **Page Tools**, dan **Repair & Optimize** (digenerate headless).
@@ -92,6 +92,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan v
 - Pemrosesan batch dan **Riwayat** lokal tanpa isi dokumen.
 - Kompresi PDF adaptif dengan profil Rendah / Disarankan / Tinggi / Maksimum.
 
+[1.6.2]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.2
 [1.6.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.1
 [1.6.0]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.6.0
 [1.5.1]: https://github.com/fahmikip/pdf-all-in-one/releases/tag/v1.5.1
