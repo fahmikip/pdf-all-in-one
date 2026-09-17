@@ -35,10 +35,10 @@ class ExtractPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(38, 30, 38, 30)
         layout.setSpacing(14)
-        title = QLabel("Extract PDF")
+        title = QLabel("Ekstrak PDF")
         title.setObjectName("title")
         layout.addWidget(title)
-        subtitle = QLabel("Pull selectable text or embedded images out of a PDF—entirely offline.")
+        subtitle = QLabel("Ambil teks yang dapat dipilih atau gambar dari dalam PDF—sepenuhnya offline.")
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         self.drop = DropZone()
@@ -46,9 +46,9 @@ class ExtractPage(QWidget):
         self.drop.files_dropped.connect(self.set_files)
         layout.addWidget(self.drop)
         mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("Extract"))
+        mode_row.addWidget(QLabel("Ekstrak"))
         self.mode = QComboBox()
-        self.mode.addItems(["Text to .txt", "Images to files"])
+        self.mode.addItems(["Teks ke .txt", "Gambar ke file"])
         self.mode.currentTextChanged.connect(self.mode_changed)
         mode_row.addWidget(self.mode, 1)
         layout.addLayout(mode_row)
@@ -61,23 +61,23 @@ class ExtractPage(QWidget):
         self.min_size = QSpinBox()
         self.min_size.setRange(0, 100000)
         self.min_size.setSuffix(" px²")
-        self.min_size.setToolTip("Skip images smaller than this area")
+        self.min_size.setToolTip("Lewati gambar yang lebih kecil dari area ini")
         self.min_size.setVisible(False)
-        options.addWidget(QLabel("Min size"))
+        options.addWidget(QLabel("Ukuran min"))
         options.addWidget(self.min_size)
         options.addStretch()
         layout.addLayout(options)
         self.progress = QProgressBar()
         self.progress.hide()
         layout.addWidget(self.progress)
-        self.status = QLabel("Choose a PDF to begin")
+        self.status = QLabel("Pilih PDF untuk memulai")
         self.status.setObjectName("muted")
         layout.addWidget(self.status)
-        process = QPushButton("Extract")
+        process = QPushButton("Ekstrak")
         process.setObjectName("info")
         process.clicked.connect(self.start)
         layout.addWidget(process)
-        self.open_button = QPushButton("Open Folder")
+        self.open_button = QPushButton("Buka Folder")
         self.open_button.setObjectName("success")
         self.open_button.hide()
         self.open_button.clicked.connect(self.open_result)
@@ -85,13 +85,13 @@ class ExtractPage(QWidget):
         layout.addStretch()
 
     def mode_changed(self, mode: str) -> None:
-        images = mode == "Images to files"
+        images = mode == "Gambar ke file"
         self.format.setVisible(images)
         self.min_size.setVisible(images)
-        self.status.setText("Choose a PDF to begin" if not self.source else self.status.text())
+        self.status.setText("Pilih PDF untuk memulai" if not self.source else self.status.text())
 
     def choose(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        name, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if name:
             self.set_files([name])
 
@@ -99,27 +99,27 @@ class ExtractPage(QWidget):
         try:
             info = validate_pdf(files[0])
         except Exception as exc:
-            QMessageBox.warning(self, "Cannot open PDF", str(exc))
+            QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
             return
         self.source = info.path
-        self.status.setText(f"Selected: {info.path.name} · {info.pages} pages")
+        self.status.setText(f"Dipilih: {info.path.name} · {info.pages} halaman")
 
     def start(self) -> None:
         if not self.source:
-            QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
-        if self.mode.currentText() == "Text to .txt":
+        if self.mode.currentText() == "Teks ke .txt":
             output, _ = QFileDialog.getSaveFileName(
                 self,
-                "Save extracted text",
+                "Simpan teks hasil ekstraksi",
                 str(self.source.with_name(f"{self.source.stem}_text.txt")),
-                "Text files (*.txt)",
+                "Berkas teks (*.txt)",
             )
             if not output:
                 return
             self.run_job(extract_text, output)
         else:
-            folder = QFileDialog.getExistingDirectory(self, "Choose output folder", str(self.source.parent))
+            folder = QFileDialog.getExistingDirectory(self, "Pilih folder output", str(self.source.parent))
             if not folder:
                 return
             self.run_job(
@@ -131,7 +131,7 @@ class ExtractPage(QWidget):
         self.progress.setValue(0)
         self.progress.show()
         self.open_button.hide()
-        self.status.setText("Extracting…")
+        self.status.setText("Mengekstrak…")
         worker = FunctionWorker(function, self.source, target, *args, with_progress=with_progress, **kwargs)
         self.worker = worker
         worker.signals.progress.connect(
@@ -152,20 +152,20 @@ class ExtractPage(QWidget):
             count = 1
             output = Path(result).parent
         if count:
-            self.status.setText(f"Extracted {count} item(s) → {output.name}")
+            self.status.setText(f"Diekstrak {count} item → {output.name}")
             HistoryStore().add(
                 self.source.name,
-                f"Extract PDF ({self.mode.currentText()})",
+                f"Ekstrak PDF ({self.mode.currentText()})",
                 self.source.stat().st_size,
                 0,
                 str(output),
             )
-        self.open_button.setText("Open Folder")
+        self.open_button.setText("Buka Folder")
         self.open_button.setVisible(True)
 
     def failed(self, message: str, details: str) -> None:
-        self.status.setText("Extraction failed")
-        dialog = QMessageBox(QMessageBox.Icon.Critical, "Something went wrong", message, parent=self)
+        self.status.setText("Ekstraksi gagal")
+        dialog = QMessageBox(QMessageBox.Icon.Critical, "Terjadi kesalahan", message, parent=self)
         dialog.setDetailedText(details)
         dialog.exec()
 

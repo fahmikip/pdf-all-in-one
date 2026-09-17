@@ -57,7 +57,7 @@ class ToolPage(QWidget):
         self.status = QLabel("")
         self.status.setObjectName("muted")
         self.layout.addWidget(self.status)
-        self.open_button = QPushButton("Open Result")
+        self.open_button = QPushButton("Buka Hasil")
         self.open_button.setObjectName("success")
         self.open_button.hide()
         self.open_button.clicked.connect(self._open_result)
@@ -67,7 +67,7 @@ class ToolPage(QWidget):
         self.progress.setValue(0)
         self.progress.show()
         self.open_button.hide()
-        self.status.setText("Processing…")
+        self.status.setText("Memproses…")
         worker = FunctionWorker(function, *args, with_progress=with_progress, **kwargs)
         worker.signals.progress.connect(self._progress)
         worker.signals.result.connect(self._success)
@@ -84,25 +84,25 @@ class ToolPage(QWidget):
             self.last_result = result.output
             if result.saved_bytes:
                 self.status.setText(
-                    f"Compression complete · {_format_size(result.original_size)} → "
-                    f"{_format_size(result.compressed_size)} · Saved {result.reduction_percent:.1f}%"
+                    f"Kompresi selesai · {_format_size(result.original_size)} → "
+                    f"{_format_size(result.compressed_size)} · Hemat {result.reduction_percent:.1f}%"
                 )
             else:
-                self.status.setText("PDF is already optimized · A safe output copy was created")
+                self.status.setText("PDF sudah optimal · Salinan keluaran yang aman dibuat")
         elif isinstance(result, list):
             self.last_result = Path(result[0]).parent if result else None
-            self.status.setText(f"Split complete · {len(result)} files created")
+            self.status.setText(f"Pecah selesai · {len(result)} file dibuat")
         else:
             self.last_result = Path(result) if result else None
-            self.status.setText("Operation completed successfully")
+            self.status.setText("Operasi selesai dengan sukses")
         self.progress.setValue(100)
-        self.open_button.setText("Open Folder" if self.last_result and self.last_result.is_dir() else "Open Result")
+        self.open_button.setText("Buka Folder" if self.last_result and self.last_result.is_dir() else "Buka Hasil")
         self.open_button.setVisible(self.last_result is not None)
 
     def _error(self, message: str, details: str) -> None:
-        self.status.setText("Operation failed")
-        dialog = QMessageBox(QMessageBox.Icon.Critical, "Something went wrong", message, parent=self)
-        dialog.setInformativeText("Your original file was not changed.")
+        self.status.setText("Operasi gagal")
+        dialog = QMessageBox(QMessageBox.Icon.Critical, "Terjadi kesalahan", message, parent=self)
+        dialog.setInformativeText("File asli Anda tidak diubah.")
         dialog.setDetailedText(details)
         dialog.exec()
 
@@ -112,53 +112,61 @@ class ToolPage(QWidget):
 
 
 class CompressPage(ToolPage):
-    def __init__(self) -> None:
-        super().__init__("Compress PDF", "Reduce PDF size locally without modifying the original file.")
+    def __init__(self, default_level: str = "recommended") -> None:
+        super().__init__("Kompres PDF", "Kecilkan ukuran file PDF secara lokal tanpa mengubah file asli.")
         self.source: Path | None = None
         self.drop = DropZone()
         self.layout.insertWidget(2, self.drop)
         self.drop.choose_requested.connect(self.choose)
         self.drop.files_dropped.connect(self.set_files)
         row = QHBoxLayout()
-        row.addWidget(QLabel("Engine"))
+        row.addWidget(QLabel("Mesin"))
         self.engine = QComboBox()
-        self.engine.addItem("Built-in", "builtin")
+        self.engine.addItem("Bawaan", "builtin")
         self.engine.addItem("Lossless (qpdf)", "qpdf")
         if find_ghostscript():
-            self.engine.addItem("Ghostscript (best for scans)", "ghostscript")
+            self.engine.addItem("Ghostscript (terbaik untuk scan)", "ghostscript")
         else:
-            self.engine.addItem("Ghostscript (install to enable)", "ghostscript")
+            self.engine.addItem("Ghostscript (pasang untuk mengaktifkan)", "ghostscript")
             self.engine.setItemData(self.engine.count() - 1, 0, Qt.ItemDataRole.UserRole - 1)
         self.engine.setToolTip(
-            "Built-in: fast image recompression. Lossless (qpdf): object-level cleanup, no quality loss. "
-            "Ghostscript: strongest for scanned PDFs (requires Ghostscript installed)."
+            "Bawaan: kompresi gambar cepat. Lossless (qpdf): pembersihan tingkat objek tanpa kehilangan kualitas. "
+            "Ghostscript: paling kuat untuk PDF hasil scan (memerlukan Ghostscript terpasang)."
         )
         row.addWidget(self.engine, 1)
-        row.addWidget(QLabel("Compression level"))
+        row.addWidget(QLabel("Tingkat kompresi"))
         self.level = QComboBox()
-        self.level.addItems(["Low", "Recommended", "High", "Maximum"])
-        self.level.setCurrentText("Recommended")
+        for label, value in (
+            ("Rendah", "low"),
+            ("Disarankan", "recommended"),
+            ("Tinggi", "high"),
+            ("Maksimum", "maximum"),
+        ):
+            self.level.addItem(label, value)
+        index = self.level.findData(default_level) if default_level else 1
+        self.level.setCurrentIndex(index if index >= 0 else 1)
         row.addWidget(self.level, 1)
         self.level.currentTextChanged.connect(self.level_changed)
-        self.process = QPushButton("Compress PDF")
+        self.process = QPushButton("Kompres PDF")
         self.process.setObjectName("success")
         self.process.clicked.connect(self.start)
         row.addWidget(self.process)
         self.layout.insertLayout(3, row)
-        self.aggressive = QCheckBox("Aggressive compression (smaller file, converts pages to images)")
-        self.aggressive.setToolTip("Useful for already optimized PDFs. Text selection and search will be lost.")
+        self.aggressive = QCheckBox("Kompresi agresif (file lebih kecil, halaman diubah menjadi gambar)")
+        self.aggressive.setToolTip("Berguna untuk PDF yang sudah optimal. Seleksi teks dan pencarian akan hilang.")
+        self.aggressive.setChecked(True)
         self.layout.insertWidget(4, self.aggressive)
-        warning = QLabel("Aggressive mode lowers image quality and removes selectable/searchable text.")
+        warning = QLabel("Mode agresif menurunkan kualitas gambar dan menghapus teks yang dapat dipilih/dicari.")
         warning.setObjectName("muted")
         self.layout.insertWidget(5, warning)
         self.layout.addStretch()
 
     def level_changed(self, level: str) -> None:
-        if level == "Maximum":
+        if level == "Maksimum":
             self.aggressive.setChecked(True)
 
     def choose(self) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if filename:
             self.set_files([filename])
 
@@ -169,20 +177,20 @@ class CompressPage(ToolPage):
             self._error(str(exc), "")
             return
         self.source = info.path
-        self.status.setText(f"Selected: {info.path.name} · {info.pages} pages · {info.size / 1048576:.2f} MB")
+        self.status.setText(f"Dipilih: {info.path.name} · {info.pages} halaman · {info.size / 1048576:.2f} MB")
 
     def start(self) -> None:
         if not self.source:
-            QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         suggested = self.source.with_name(f"{self.source.stem}_compressed.pdf")
-        output, _ = QFileDialog.getSaveFileName(self, "Save compressed PDF", str(suggested), "PDF files (*.pdf)")
+        output, _ = QFileDialog.getSaveFileName(self, "Simpan PDF terkompresi", str(suggested), "Berkas PDF (*.pdf)")
         if output:
             if self.aggressive.isChecked():
                 answer = QMessageBox.warning(
                     self,
-                    "Aggressive compression",
-                    "Pages will be converted to images. Text selection, links, forms, and search may be lost. Continue?",
+                    "Kompresi agresif",
+                    "Halaman akan diubah menjadi gambar. Seleksi teks, tautan, formulir, dan pencarian mungkin hilang. Lanjutkan?",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
                     QMessageBox.StandardButton.Cancel,
                 )
@@ -192,7 +200,7 @@ class CompressPage(ToolPage):
                 compress_pdf,
                 self.source,
                 output,
-                self.level.currentText().lower(),
+                self.level.currentData(),
                 aggressive=self.aggressive.isChecked(),
                 engine=self.engine.currentData(),
                 with_progress=True,
@@ -202,14 +210,14 @@ class CompressPage(ToolPage):
         super()._success(result)
         if isinstance(result, CompressionResult) and self.source:
             HistoryStore().add(
-                self.source.name, "Compress PDF", result.original_size, result.compressed_size, str(result.output)
+                self.source.name, "Kompres PDF", result.original_size, result.compressed_size, str(result.output)
             )
 
 
 class MergePage(ToolPage):
     def __init__(self) -> None:
-        super().__init__("Merge PDF", "Add two or more PDFs, arrange their order, and combine them safely.")
-        self.drop = DropZone("Drop multiple PDF files here", multiple=True)
+        super().__init__("Gabung PDF", "Tambahkan dua PDF atau lebih, atur urutannya, lalu gabungkan dengan aman.")
+        self.drop = DropZone("Seret beberapa file PDF di sini", multiple=True)
         self.layout.insertWidget(2, self.drop)
         self.drop.choose_requested.connect(self.choose)
         self.drop.files_dropped.connect(self.add_files)
@@ -218,10 +226,10 @@ class MergePage(ToolPage):
         self.files.setMinimumHeight(150)
         self.layout.insertWidget(3, self.files)
         controls = QHBoxLayout()
-        remove = QPushButton("Remove Selected")
+        remove = QPushButton("Hapus yang Dipilih")
         remove.setObjectName("ghost")
         remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow()))
-        merge = QPushButton("Merge PDF")
+        merge = QPushButton("Gabung PDF")
         merge.setObjectName("success")
         merge.clicked.connect(self.start)
         controls.addWidget(remove)
@@ -231,7 +239,7 @@ class MergePage(ToolPage):
         self.layout.addStretch()
 
     def choose(self) -> None:
-        files, _ = QFileDialog.getOpenFileNames(self, "Choose PDFs", "", "PDF files (*.pdf)")
+        files, _ = QFileDialog.getOpenFileNames(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         self.add_files(files)
 
     def add_files(self, files: list[str]) -> None:
@@ -246,15 +254,15 @@ class MergePage(ToolPage):
                 self.files.addItem(path.name)
                 self.files.item(self.files.count() - 1).setData(Qt.ItemDataRole.UserRole, str(path))
                 existing.add(str(path))
-        self.status.setText(f"{self.files.count()} PDF files selected")
+        self.status.setText(f"{self.files.count()} file PDF dipilih")
 
     def start(self) -> None:
         sources = [self.files.item(i).data(Qt.ItemDataRole.UserRole) for i in range(self.files.count())]
         if len(sources) < 2:
-            QMessageBox.information(self, "Add PDFs", "Add at least two PDF files.")
+            QMessageBox.information(self, "Tambah PDF", "Tambahkan minimal dua file PDF.")
             return
         output, _ = QFileDialog.getSaveFileName(
-            self, "Save merged PDF", str(Path(sources[0]).with_name("merged.pdf")), "PDF files (*.pdf)"
+            self, "Simpan PDF gabungan", str(Path(sources[0]).with_name("merged.pdf")), "Berkas PDF (*.pdf)"
         )
         if output:
             self.run_job(merge_pdfs, sources, output, with_progress=True)
@@ -264,8 +272,8 @@ class MergePage(ToolPage):
         if isinstance(result, Path):
             sources = [Path(self.files.item(i).data(Qt.ItemDataRole.UserRole)) for i in range(self.files.count())]
             HistoryStore().add(
-                f"{len(sources)} files",
-                "Merge PDF",
+                f"{len(sources)} file",
+                "Gabung PDF",
                 sum(path.stat().st_size for path in sources if path.exists()),
                 result.stat().st_size,
                 str(result),
@@ -274,7 +282,7 @@ class MergePage(ToolPage):
 
 class SplitPage(ToolPage):
     def __init__(self) -> None:
-        super().__init__("Split PDF", "Split every page, create chunks, or extract a page range.")
+        super().__init__("Pecah PDF", "Pisahkan setiap halaman, buat potongan, atau ekstrak rentang halaman.")
         self.source: Path | None = None
         self.drop = DropZone()
         self.layout.insertWidget(2, self.drop)
@@ -283,7 +291,7 @@ class SplitPage(ToolPage):
         row = QHBoxLayout()
         row.addWidget(QLabel("Mode"))
         self.mode = QComboBox()
-        self.mode.addItems(["Every page", "Every N pages", "Page range"])
+        self.mode.addItems(["Setiap halaman", "Setiap N halaman", "Rentang halaman"])
         self.mode.currentTextChanged.connect(self.mode_changed)
         row.addWidget(self.mode)
         self.value = QComboBox()
@@ -296,7 +304,7 @@ class SplitPage(ToolPage):
         self.count.setValue(2)
         self.count.hide()
         row.addWidget(self.count)
-        process = QPushButton("Split PDF")
+        process = QPushButton("Pecah PDF")
         process.setObjectName("warning")
         process.clicked.connect(self.start)
         row.addWidget(process)
@@ -304,11 +312,11 @@ class SplitPage(ToolPage):
         self.layout.addStretch()
 
     def mode_changed(self, mode: str) -> None:
-        self.value.setVisible(mode == "Page range")
-        self.count.setVisible(mode == "Every N pages")
+        self.value.setVisible(mode == "Rentang halaman")
+        self.count.setVisible(mode == "Setiap N halaman")
 
     def choose(self) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if filename:
             self.set_files([filename])
 
@@ -319,26 +327,26 @@ class SplitPage(ToolPage):
             self._error(str(exc), "")
             return
         self.source = info.path
-        self.status.setText(f"Selected: {info.path.name} · {info.pages} pages")
+        self.status.setText(f"Dipilih: {info.path.name} · {info.pages} halaman")
 
     def start(self) -> None:
         if not self.source:
-            QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         mode = self.mode.currentText()
-        if mode == "Page range":
+        if mode == "Rentang halaman":
             output, _ = QFileDialog.getSaveFileName(
                 self,
-                "Save extracted PDF",
+                "Simpan PDF hasil ekstrak",
                 str(self.source.with_name(f"{self.source.stem}_extracted.pdf")),
-                "PDF files (*.pdf)",
+                "Berkas PDF (*.pdf)",
             )
             if output:
                 self.run_job(extract_range, self.source, output, self.value.currentText())
         else:
-            folder = QFileDialog.getExistingDirectory(self, "Choose output folder", str(self.source.parent))
+            folder = QFileDialog.getExistingDirectory(self, "Pilih folder tujuan", str(self.source.parent))
             if folder:
-                self.run_job(split_every_n, self.source, folder, 1 if mode == "Every page" else self.count.value())
+                self.run_job(split_every_n, self.source, folder, 1 if mode == "Setiap halaman" else self.count.value())
 
     def _success(self, result: object) -> None:
         super()._success(result)
@@ -346,7 +354,7 @@ class SplitPage(ToolPage):
             outputs = list(result) if isinstance(result, list) else [Path(result)]
             HistoryStore().add(
                 self.source.name,
-                "Split / Extract PDF",
+                "Pecah / Ekstrak PDF",
                 self.source.stat().st_size,
                 sum(Path(path).stat().st_size for path in outputs),
                 str(Path(outputs[0]).parent if len(outputs) > 1 else outputs[0]),

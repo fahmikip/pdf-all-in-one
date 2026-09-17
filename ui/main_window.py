@@ -30,6 +30,30 @@ from ui.pages.repair import RepairPage
 from ui.pages.security import SecurityPage
 from ui.pages.settings import SettingsPage
 from ui.sidebar import Sidebar
+from ui.themes.palette import dark_mode
+from ui.widgets.backdrop import Backdrop
+
+
+class _Shell(QWidget):
+    """Central widget that keeps the aurora backdrop behind the glass panels."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.backdrop: Backdrop | None = None
+
+    def set_backdrop(self, backdrop: Backdrop) -> None:
+        self.backdrop = backdrop
+        backdrop.setParent(self)
+        self._layout_backdrop()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._layout_backdrop()
+
+    def _layout_backdrop(self) -> None:
+        if self.backdrop is not None:
+            self.backdrop.setGeometry(self.rect())
+            self.backdrop.lower()
 
 
 class MainWindow(QMainWindow):
@@ -40,7 +64,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME} {VERSION}")
         self.setMinimumSize(1024, 700)
         self.resize(1280, 800)
-        shell = QWidget()
+        shell = _Shell()
+        self.backdrop = Backdrop(dark_mode(settings.theme))
+        shell.set_backdrop(self.backdrop)
         layout = QHBoxLayout(shell)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -51,7 +77,7 @@ class MainWindow(QMainWindow):
         self.pages: dict[str, QWidget] = {
             "home": HomePage(),
             "about": AboutPage(),
-            "compress": CompressPage(),
+            "compress": CompressPage(settings.default_compression),
             "merge": MergePage(),
             "split": SplitPage(),
             "organize": OrganizerPage(),
@@ -68,6 +94,9 @@ class MainWindow(QMainWindow):
             "pages": PageToolsPage(),
             "repair": RepairPage(),
         }
+        settings_page = self.pages["settings"]
+        if isinstance(settings_page, SettingsPage):
+            settings_page.theme_changed.connect(lambda theme: self.backdrop.set_dark(dark_mode(theme)))
         labels = {}
         for key, title in labels.items():
             self.pages[key] = PlaceholderPage(title)
@@ -126,32 +155,30 @@ class MainWindow(QMainWindow):
         if not isinstance(result, UpdateInfo):
             if manual:
                 QMessageBox.information(
-                    self, "PDF Master is up to date", "You are using the latest available version."
+                    self, "PDF Master sudah terbaru", "Anda menggunakan versi terbaru yang tersedia."
                 )
             return
         if result.version == self.settings.skipped_version:
             return
         dialog = QMessageBox(self)
         dialog.setIcon(QMessageBox.Icon.Information)
-        dialog.setWindowTitle("PDF Master update available")
-        dialog.setText(f"PDF Master {result.version} is available")
+        dialog.setWindowTitle("Pembaruan PDF Master tersedia")
+        dialog.setText(f"PDF Master {result.version} tersedia")
         if result.installer is not None:
             dialog.setInformativeText(
-                "You are using version "
+                "Anda menggunakan versi "
                 + VERSION
-                + ". The installer can be downloaded now and run with your permission."
+                + ". Installer dapat diunduh sekarang dan dijalankan dengan izin Anda."
             )
-            download = dialog.addButton("Download & Install", QMessageBox.ButtonRole.AcceptRole)
+            download = dialog.addButton("Unduh & Pasang", QMessageBox.ButtonRole.AcceptRole)
             dialog.setDefaultButton(download)
         else:
             dialog.setInformativeText(
-                "You are using version "
-                + VERSION
-                + ". Updates are never downloaded or installed without your permission."
+                "Anda menggunakan versi " + VERSION + ". Pembaruan tidak pernah diunduh atau dipasang tanpa izin Anda."
             )
-        visit = dialog.addButton("View Release", QMessageBox.ButtonRole.ActionRole)
-        skip = dialog.addButton("Skip This Version", QMessageBox.ButtonRole.DestructiveRole)
-        dialog.addButton("Later", QMessageBox.ButtonRole.RejectRole)
+        visit = dialog.addButton("Lihat Rilis", QMessageBox.ButtonRole.ActionRole)
+        skip = dialog.addButton("Lewati Versi Ini", QMessageBox.ButtonRole.DestructiveRole)
+        dialog.addButton("Nanti", QMessageBox.ButtonRole.RejectRole)
         dialog.exec()
         clicked = dialog.clickedButton()
         if result.installer is not None and clicked is download:
@@ -175,13 +202,13 @@ class MainWindow(QMainWindow):
         worker.signals.error.connect(self._update_failed)
         worker.signals.finished.connect(lambda: setattr(self, "update_worker", None))
         QThreadPool.globalInstance().start(worker)
-        self._ensure_progress().setLabelText("Preparing download…")
+        self._ensure_progress().setLabelText("Menyiapkan unduhan…")
         self._ensure_progress().setValue(0)
 
     def _ensure_progress(self) -> QProgressDialog:
         if getattr(self, "update_progress", None) is None:
             dialog = QProgressDialog("Updater", None, 0, 100, self)
-            dialog.setWindowTitle("Downloading update")
+            dialog.setWindowTitle("Mengunduh pembaruan")
             dialog.setWindowModality(Qt.WindowModality.WindowModal)
             dialog.setCancelButton(None)
             dialog.setMinimumDuration(0)
@@ -203,13 +230,13 @@ class MainWindow(QMainWindow):
             self.update_progress = None
         dialog = QMessageBox(self)
         dialog.setIcon(QMessageBox.Icon.Question)
-        dialog.setWindowTitle("Run the updater?")
-        dialog.setText("PDF Master update ready")
+        dialog.setWindowTitle("Jalankan updater?")
+        dialog.setText("Pembaruan PDF Master siap")
         dialog.setInformativeText(
-            "The installer has been downloaded. Run it now to complete the update? PDF Master will close while the installer runs."
+            "Installer telah diunduh. Jalankan sekarang untuk menyelesaikan pembaruan? PDF Master akan ditutup selama installer berjalan."
         )
-        install_now = dialog.addButton("Install Now", QMessageBox.ButtonRole.AcceptRole)
-        dialog.addButton("Later", QMessageBox.ButtonRole.RejectRole)
+        install_now = dialog.addButton("Pasang Sekarang", QMessageBox.ButtonRole.AcceptRole)
+        dialog.addButton("Nanti", QMessageBox.ButtonRole.RejectRole)
         dialog.setDefaultButton(install_now)
         dialog.exec()
         if dialog.clickedButton() is install_now:
@@ -220,4 +247,4 @@ class MainWindow(QMainWindow):
         if getattr(self, "update_progress", None) is not None:
             self.update_progress.close()
             self.update_progress = None
-        QMessageBox.warning(self, "Update failed", message)
+        QMessageBox.warning(self, "Pembaruan gagal", message)

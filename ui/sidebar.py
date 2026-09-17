@@ -8,14 +8,14 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollA
 from ui.icons import icon
 
 SECTION_COLORS = {
-    "PDF TOOLS": "#4F46E5",
-    "PAGE TOOLS": "#16A34A",
-    "CONVERT": "#0D9488",
-    "EDIT": "#D97706",
-    "SECURITY": "#E11D48",
-    "OCR": "#7C3AED",
-    "ADVANCED": "#0891B2",
-    "MORE": "#64748B",
+    "ALAT PDF": "#6366F1",
+    "ALAT HALAMAN": "#10B981",
+    "KONVERSI": "#14B8A6",
+    "EDIT": "#F59E0B",
+    "KEAMANAN": "#F43F5E",
+    "OCR": "#8B5CF6",
+    "LANJUTAN": "#06B6D4",
+    "LAINNYA": "#94A3B8",
 }
 
 
@@ -39,7 +39,7 @@ class Sidebar(QFrame):
         brand.setObjectName("brand")
         brand_row.addWidget(brand, 1)
         layout.addLayout(brand_row)
-        caption = QLabel("Offline PDF Toolkit")
+        caption = QLabel("Perangkat PDF Offline")
         caption.setObjectName("muted")
         caption.setContentsMargins(6, 0, 6, 0)
         layout.addWidget(caption)
@@ -56,22 +56,22 @@ class Sidebar(QFrame):
         navigation_layout.setSpacing(2)
         self.buttons: dict[str, QPushButton] = {}
         groups = {
-            "": [("home", "Home")],
-            "PDF TOOLS": [
-                ("compress", "Compress PDF"),
-                ("merge", "Merge PDF"),
-                ("split", "Split PDF"),
-                ("organize", "Organize PDF"),
-                ("extract", "Extract PDF"),
+            "": [("home", "Beranda")],
+            "ALAT PDF": [
+                ("compress", "Kompres PDF"),
+                ("merge", "Gabung PDF"),
+                ("split", "Pecah PDF"),
+                ("organize", "Susun PDF"),
+                ("extract", "Ekstrak PDF"),
                 ("layout", "Print Layout"),
             ],
-            "PAGE TOOLS": [("pages", "Page Tools")],
-            "CONVERT": [("convert", "Convert Files")],
-            "EDIT": [("edit", "Watermark & More"), ("forms", "PDF Forms & Sign")],
-            "SECURITY": [("security", "Protect / Unlock")],
-            "OCR": [("ocr", "OCR PDF / Image")],
-            "ADVANCED": [("batch", "Batch Processing"), ("repair", "Repair & Optimize")],
-            "MORE": [("history", "History"), ("settings", "Settings"), ("about", "About Developer")],
+            "ALAT HALAMAN": [("pages", "Alat Halaman")],
+            "KONVERSI": [("convert", "Konversi File")],
+            "EDIT": [("edit", "Watermark & Lainnya"), ("forms", "Form PDF & Tanda Tangan")],
+            "KEAMANAN": [("security", "Amankan / Buka Kunci")],
+            "OCR": [("ocr", "OCR PDF / Gambar")],
+            "LANJUTAN": [("batch", "Proses Batch"), ("repair", "Perbaiki & Optimalkan")],
+            "LAINNYA": [("history", "Riwayat"), ("settings", "Pengaturan"), ("about", "Tentang Developer")],
         }
         for heading, entries in groups.items():
             if heading:
@@ -94,7 +94,7 @@ class Sidebar(QFrame):
         navigation_layout.addStretch()
         scroll.setWidget(navigation)
         layout.addWidget(scroll, 1)
-        privacy = QLabel("Files stay on this computer")
+        privacy = QLabel("File tetap berada di komputer ini")
         privacy.setObjectName("muted")
         privacy.setWordWrap(True)
         privacy.setContentsMargins(6, 5, 6, 0)

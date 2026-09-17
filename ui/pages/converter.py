@@ -63,31 +63,31 @@ class ConverterPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(38, 30, 38, 30)
         layout.setSpacing(12)
-        title = QLabel("Convert Files")
+        title = QLabel("Konversi File")
         title.setObjectName("title")
         layout.addWidget(title)
-        subtitle = QLabel("Convert images to PDF or export PDF pages as images—entirely offline.")
+        subtitle = QLabel("Ubah gambar menjadi PDF atau ekspor halaman PDF sebagai gambar—sepenuhnya offline.")
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("Conversion"))
+        mode_row.addWidget(QLabel("Konversi"))
         self.mode = QComboBox()
         self.mode.addItems(
             [
-                "Image to PDF",
-                "PDF to JPG",
-                "PDF to PNG",
-                "PDF to WebP",
-                "Word to PDF",
-                "Excel to PDF",
-                "PowerPoint to PDF",
-                "PDF to Word",
-                "PDF to Excel",
+                "Gambar ke PDF",
+                "PDF ke JPG",
+                "PDF ke PNG",
+                "PDF ke WebP",
+                "Word ke PDF",
+                "Excel ke PDF",
+                "PowerPoint ke PDF",
+                "PDF ke Word",
+                "PDF ke Excel",
             ]
         )
         self.mode.currentTextChanged.connect(self.mode_changed)
         mode_row.addWidget(self.mode, 1)
-        self.locate_office = QPushButton("Locate LibreOffice")
+        self.locate_office = QPushButton("Temukan LibreOffice")
         self.locate_office.setObjectName("ghost")
         self.locate_office.clicked.connect(self.choose_libreoffice)
         mode_row.addWidget(self.locate_office)
@@ -98,13 +98,13 @@ class ConverterPage(QWidget):
         self.files.external_files_dropped.connect(self.add_paths)
         layout.addWidget(self.files)
         file_row = QHBoxLayout()
-        add = QPushButton("Add Files")
+        add = QPushButton("Tambah File")
         add.setObjectName("ghost")
         add.clicked.connect(self.choose)
-        remove = QPushButton("Remove Selected")
+        remove = QPushButton("Hapus yang Dipilih")
         remove.setObjectName("ghost")
         remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow()))
-        clear = QPushButton("Clear")
+        clear = QPushButton("Bersihkan")
         clear.setObjectName("ghost")
         clear.clicked.connect(self.files.clear)
         file_row.addWidget(add)
@@ -115,15 +115,17 @@ class ConverterPage(QWidget):
         settings = QHBoxLayout()
         self.page_size = QComboBox()
         self.page_size.addItems(["A4", "Letter", "Legal", "Fit"])
-        settings.addWidget(QLabel("Page size"))
+        settings.addWidget(QLabel("Ukuran halaman"))
         settings.addWidget(self.page_size)
         self.orientation = QComboBox()
-        self.orientation.addItems(["Auto", "Portrait", "Landscape"])
-        settings.addWidget(QLabel("Orientation"))
+        for label, value in (("Otomatis", "auto"), ("Potret", "portrait"), ("Lanskap", "landscape")):
+            self.orientation.addItem(label, value)
+        settings.addWidget(QLabel("Orientasi"))
         settings.addWidget(self.orientation)
         self.margin = QComboBox()
-        self.margin.addItems(["None", "Small", "Medium"])
-        self.margin.setCurrentText("Small")
+        for label, value in (("Tanpa", "none"), ("Kecil", "small"), ("Sedang", "medium")):
+            self.margin.addItem(label, value)
+        self.margin.setCurrentIndex(self.margin.findData("small"))
         settings.addWidget(QLabel("Margin"))
         settings.addWidget(self.margin)
         self.dpi = QComboBox()
@@ -133,11 +135,11 @@ class ConverterPage(QWidget):
         settings.addWidget(self.dpi)
         layout.addLayout(settings)
         options = QHBoxLayout()
-        options.addWidget(QLabel("Pages"))
+        options.addWidget(QLabel("Halaman"))
         self.pages = QLineEdit()
-        self.pages.setPlaceholderText("All pages, or e.g. 1-3, 5")
+        self.pages.setPlaceholderText("Semua halaman, atau mis. 1-3, 5")
         options.addWidget(self.pages, 1)
-        options.addWidget(QLabel("Quality"))
+        options.addWidget(QLabel("Kualitas"))
         self.quality = QSlider(Qt.Orientation.Horizontal)
         self.quality.setRange(1, 100)
         self.quality.setValue(90)
@@ -147,10 +149,10 @@ class ConverterPage(QWidget):
         self.progress = QProgressBar()
         self.progress.hide()
         layout.addWidget(self.progress)
-        self.status = QLabel("Add files to begin")
+        self.status = QLabel("Tambahkan file untuk memulai")
         self.status.setObjectName("muted")
         layout.addWidget(self.status)
-        process = QPushButton("Convert")
+        process = QPushButton("Konversi")
         process.setObjectName("success")
         process.clicked.connect(self.start)
         layout.addWidget(process)
@@ -158,9 +160,9 @@ class ConverterPage(QWidget):
         self.mode_changed(self.mode.currentText())
 
     def mode_changed(self, mode: str) -> None:
-        to_pdf = mode == "Image to PDF"
-        pdf_image = mode in {"PDF to JPG", "PDF to PNG", "PDF to WebP"}
-        office = mode in {"Word to PDF", "Excel to PDF", "PowerPoint to PDF"}
+        to_pdf = mode == "Gambar ke PDF"
+        pdf_image = mode in {"PDF ke JPG", "PDF ke PNG", "PDF ke WebP"}
+        office = mode in {"Word ke PDF", "Excel ke PDF", "PowerPoint ke PDF"}
         self.files.clear()
         self.page_size.setEnabled(to_pdf)
         self.orientation.setEnabled(to_pdf)
@@ -170,21 +172,21 @@ class ConverterPage(QWidget):
         self.quality.setEnabled(pdf_image)
         self.locate_office.setVisible(office)
         if office:
-            self.status.setText(f"LibreOffice: {self.libreoffice or 'Not Found'}")
+            self.status.setText(f"LibreOffice: {self.libreoffice or 'Tidak Ditemukan'}")
         elif to_pdf:
-            self.status.setText("Add images to begin")
-        elif mode == "PDF to Word":
+            self.status.setText("Tambahkan gambar untuk memulai")
+        elif mode == "PDF ke Word":
             self.status.setText(
-                "Complex layouts may not convert perfectly. Text, paragraphs, and images are prioritized."
+                "Tata letak yang rumit mungkin tidak terkonversi sempurna. Teks, paragraf, dan gambar diutamakan."
             )
-        elif mode == "PDF to Excel":
-            self.status.setText("All text and images are laid out into Excel worksheets.")
+        elif mode == "PDF ke Excel":
+            self.status.setText("Semua teks dan gambar disusun ke dalam lembar kerja Excel.")
         else:
-            self.status.setText("Add one PDF to begin")
+            self.status.setText("Tambahkan satu PDF untuk memulai")
 
     def choose_libreoffice(self) -> None:
         name, _ = QFileDialog.getOpenFileName(
-            self, "Locate LibreOffice", r"C:\Program Files", "soffice.exe (soffice.exe)"
+            self, "Temukan LibreOffice", r"C:\Program Files", "soffice.exe (soffice.exe)"
         )
         if name:
             self.libreoffice = find_libreoffice(name)
@@ -192,23 +194,23 @@ class ConverterPage(QWidget):
 
     def choose(self) -> None:
         mode = self.mode.currentText()
-        if mode == "Image to PDF":
+        if mode == "Gambar ke PDF":
             paths, _ = QFileDialog.getOpenFileNames(
-                self, "Choose images", "", "Images (*.jpg *.jpeg *.png *.webp *.bmp *.tif *.tiff)"
+                self, "Pilih gambar", "", "Gambar (*.jpg *.jpeg *.png *.webp *.bmp *.tif *.tiff)"
             )
         else:
-            mode_pdf_extract = mode in {"PDF to Word", "PDF to Excel"}
+            mode_pdf_extract = mode in {"PDF ke Word", "PDF ke Excel"}
             if mode_pdf_extract:
-                path, _ = QFileDialog.getOpenFileName(self, "Choose source file", "", "PDF files (*.pdf)")
+                path, _ = QFileDialog.getOpenFileName(self, "Pilih file sumber", "", "Berkas PDF (*.pdf)")
                 paths = [path] if path else []
             else:
                 filters = {
-                    "Word to PDF": "Word files (*.doc *.docx)",
-                    "Excel to PDF": "Excel files (*.xls *.xlsx)",
-                    "PowerPoint to PDF": "PowerPoint files (*.ppt *.pptx)",
+                    "Word ke PDF": "Berkas Word (*.doc *.docx)",
+                    "Excel ke PDF": "Berkas Excel (*.xls *.xlsx)",
+                    "PowerPoint ke PDF": "Berkas PowerPoint (*.ppt *.pptx)",
                 }
                 path, _ = QFileDialog.getOpenFileName(
-                    self, "Choose source file", "", filters.get(mode, "PDF files (*.pdf)")
+                    self, "Pilih file sumber", "", filters.get(mode, "Berkas PDF (*.pdf)")
                 )
                 paths = [path] if path else []
             self.files.clear()
@@ -216,11 +218,11 @@ class ConverterPage(QWidget):
 
     def add_paths(self, paths: list[str]) -> None:
         mode = self.mode.currentText()
-        to_pdf = mode == "Image to PDF"
+        to_pdf = mode == "Gambar ke PDF"
         allowed = {
-            "Word to PDF": {".doc", ".docx"},
-            "Excel to PDF": {".xls", ".xlsx"},
-            "PowerPoint to PDF": {".ppt", ".pptx"},
+            "Word ke PDF": {".doc", ".docx"},
+            "Excel ke PDF": {".xls", ".xlsx"},
+            "PowerPoint ke PDF": {".ppt", ".pptx"},
         }.get(mode, {".pdf"})
         valid = [
             path
@@ -239,9 +241,9 @@ class ConverterPage(QWidget):
                 self.files.item(self.files.count() - 1).setData(Qt.ItemDataRole.UserRole, absolute)
                 existing.add(absolute)
         if valid:
-            self.status.setText(f"{self.files.count()} file(s) selected")
+            self.status.setText(f"{self.files.count()} file dipilih")
         elif paths:
-            self.status.setText("No supported files were added")
+            self.status.setText("Tidak ada file yang didukung ditambahkan")
 
     def _paths(self) -> list[str]:
         return [self.files.item(index).data(Qt.ItemDataRole.UserRole) for index in range(self.files.count())]
@@ -249,12 +251,12 @@ class ConverterPage(QWidget):
     def start(self) -> None:
         paths = self._paths()
         if not paths:
-            QMessageBox.information(self, "Add files", "Add source files first.")
+            QMessageBox.information(self, "Tambah file", "Tambahkan file sumber terlebih dahulu.")
             return
         mode = self.mode.currentText()
-        if mode == "Image to PDF":
+        if mode == "Gambar ke PDF":
             output, _ = QFileDialog.getSaveFileName(
-                self, "Save PDF", str(Path(paths[0]).with_name("images.pdf")), "PDF files (*.pdf)"
+                self, "Simpan PDF", str(Path(paths[0]).with_name("images.pdf")), "Berkas PDF (*.pdf)"
             )
             if not output:
                 return
@@ -263,17 +265,17 @@ class ConverterPage(QWidget):
                 (paths, output),
                 {
                     "page_size": self.page_size.currentText().lower(),
-                    "orientation": self.orientation.currentText().lower(),
-                    "margin": self.margin.currentText().lower(),
+                    "orientation": self.orientation.currentData(),
+                    "margin": self.margin.currentData(),
                 },
             )
-        elif mode in {"PDF to JPG", "PDF to PNG", "PDF to WebP"}:
+        elif mode in {"PDF ke JPG", "PDF ke PNG", "PDF ke WebP"}:
             try:
                 validate_pdf(paths[0])
             except Exception as exc:
-                QMessageBox.warning(self, "Cannot open PDF", str(exc))
+                QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
                 return
-            folder = QFileDialog.getExistingDirectory(self, "Choose output folder", str(Path(paths[0]).parent))
+            folder = QFileDialog.getExistingDirectory(self, "Pilih folder output", str(Path(paths[0]).parent))
             if not folder:
                 return
             function, args = pdf_to_images, (paths[0], folder)
@@ -283,42 +285,42 @@ class ConverterPage(QWidget):
                 "quality": self.quality.value(),
                 "page_range": self.pages.text(),
             }
-        elif mode in {"Word to PDF", "Excel to PDF", "PowerPoint to PDF"}:
+        elif mode in {"Word ke PDF", "Excel ke PDF", "PowerPoint ke PDF"}:
             if not self.libreoffice:
                 QMessageBox.warning(
                     self,
-                    "LibreOffice required",
-                    "LibreOffice is required for Office conversion. Install it or click Locate LibreOffice.",
+                    "LibreOffice diperlukan",
+                    "LibreOffice wajib untuk konversi Office. Pasang aplikasinya atau klik Temukan LibreOffice.",
                 )
                 return
             output, _ = QFileDialog.getSaveFileName(
-                self, "Save PDF", str(Path(paths[0]).with_suffix(".pdf")), "PDF files (*.pdf)"
+                self, "Simpan PDF", str(Path(paths[0]).with_suffix(".pdf")), "Berkas PDF (*.pdf)"
             )
             if not output:
                 return
             function, args, kwargs = office_to_pdf, (paths[0], output), {"executable": self.libreoffice}
-        elif mode == "PDF to Excel":
+        elif mode == "PDF ke Excel":
             try:
                 validate_pdf(paths[0])
             except Exception as exc:
-                QMessageBox.warning(self, "Cannot open PDF", str(exc))
+                QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
                 return
             output, _ = QFileDialog.getSaveFileName(
-                self, "Save Excel workbook", str(Path(paths[0]).with_suffix(".xlsx")), "Excel files (*.xlsx)"
+                self, "Simpan buku kerja Excel", str(Path(paths[0]).with_suffix(".xlsx")), "Berkas Excel (*.xlsx)"
             )
             if not output:
                 return
             function, args, kwargs = pdf_to_excel, (paths[0], output), {}
         else:
             output, _ = QFileDialog.getSaveFileName(
-                self, "Save Word document", str(Path(paths[0]).with_suffix(".docx")), "Word files (*.docx)"
+                self, "Simpan dokumen Word", str(Path(paths[0]).with_suffix(".docx")), "Berkas Word (*.docx)"
             )
             if not output:
                 return
             function, args, kwargs = pdf_to_word, (paths[0], output), {}
         self.progress.setValue(0)
         self.progress.show()
-        self.status.setText("Converting…")
+        self.status.setText("Mengonversi…")
         worker = FunctionWorker(function, *args, with_progress=True, **kwargs)
         self.worker = worker
         worker.signals.progress.connect(
@@ -331,17 +333,17 @@ class ConverterPage(QWidget):
 
     def completed(self, result: object) -> None:
         path = Path(result[0]).parent if isinstance(result, list) else Path(result)
-        self.status.setText("Conversion completed successfully")
+        self.status.setText("Konversi selesai")
         answer = QMessageBox.question(
             self,
-            "Conversion complete",
-            "Output saved. Open its folder?",
+            "Konversi selesai",
+            "Output tersimpan. Buka foldernya?",
             QMessageBox.StandardButton.Open | QMessageBox.StandardButton.Close,
         )
         if answer == QMessageBox.StandardButton.Open:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(path if path.is_dir() else path.parent)))
 
     def failed(self, message: str, details: str) -> None:
-        dialog = QMessageBox(QMessageBox.Icon.Critical, "Conversion failed", message, parent=self)
+        dialog = QMessageBox(QMessageBox.Icon.Critical, "Konversi gagal", message, parent=self)
         dialog.setDetailedText(details)
         dialog.exec()

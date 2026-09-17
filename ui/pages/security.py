@@ -32,15 +32,15 @@ class SecurityPage(QWidget):
         self.worker = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(38, 30, 38, 30)
-        title = QLabel("PDF Security")
+        title = QLabel("Keamanan PDF")
         title.setObjectName("title")
         layout.addWidget(title)
-        subtitle = QLabel("Protect documents or remove encryption when you know the password.")
+        subtitle = QLabel("Lindungi dokumen atau hapus enkripsi saat Anda mengetahui kata sandinya.")
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         row = QHBoxLayout()
-        self.source_label = QLabel("No PDF selected")
-        choose = QPushButton("Choose PDF")
+        self.source_label = QLabel("Belum ada PDF dipilih")
+        choose = QPushButton("Pilih PDF")
         choose.setObjectName("ghost")
         choose.clicked.connect(self.choose)
         row.addWidget(self.source_label, 1)
@@ -53,75 +53,75 @@ class SecurityPage(QWidget):
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.textChanged.connect(self.update_strength)
-        form.addRow("Open password", self.password)
+        form.addRow("Kata sandi buka", self.password)
         self.confirm = QLineEdit()
         self.confirm.setEchoMode(QLineEdit.EchoMode.Password)
-        form.addRow("Confirm password", self.confirm)
+        form.addRow("Konfirmasi kata sandi", self.confirm)
         self.strength = QProgressBar()
         self.strength.setRange(0, 100)
-        form.addRow("Strength", self.strength)
-        self.strength_label = QLabel("Weak")
+        form.addRow("Kekuatan", self.strength)
+        self.strength_label = QLabel("Lemah")
         form.addRow("", self.strength_label)
-        self.printing = QCheckBox("Allow printing")
+        self.printing = QCheckBox("Izinkan pencetakan")
         self.printing.setChecked(True)
         form.addRow(self.printing)
-        self.copying = QCheckBox("Allow copying and accessibility")
+        self.copying = QCheckBox("Izinkan penyalinan dan aksesibilitas")
         self.copying.setChecked(True)
         form.addRow(self.copying)
-        self.editing = QCheckBox("Allow editing")
+        self.editing = QCheckBox("Izinkan pengeditan")
         form.addRow(self.editing)
-        button = QPushButton("Protect PDF")
+        button = QPushButton("Lindungi PDF")
         button.setObjectName("danger")
         button.clicked.connect(self.protect)
         form.addRow(button)
-        tabs.addTab(protect, "Protect PDF")
+        tabs.addTab(protect, "Lindungi PDF")
         unlock = QWidget()
         unlock_form = QFormLayout(unlock)
         self.unlock_password = QLineEdit()
         self.unlock_password.setEchoMode(QLineEdit.EchoMode.Password)
-        unlock_form.addRow("Current password", self.unlock_password)
-        unlock_button = QPushButton("Unlock PDF")
+        unlock_form.addRow("Kata sandi saat ini", self.unlock_password)
+        unlock_button = QPushButton("Buka Kunci PDF")
         unlock_button.setObjectName("info")
         unlock_button.clicked.connect(self.unlock)
         unlock_form.addRow(unlock_button)
-        tabs.addTab(unlock, "Unlock PDF")
-        self.status = QLabel("Passwords are never stored or logged.")
+        tabs.addTab(unlock, "Buka Kunci PDF")
+        self.status = QLabel("Kata sandi tidak pernah disimpan atau dicatat.")
         self.status.setObjectName("muted")
         layout.addWidget(self.status)
         layout.addStretch()
 
     def choose(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        name, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if not name:
             return
         try:
             info = validate_pdf(name, allow_encrypted=True)
         except Exception as exc:
-            QMessageBox.warning(self, "Cannot open PDF", str(exc))
+            QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
             return
         self.source = info.path
-        self.source_label.setText(f"{info.path.name} · {'Protected' if info.encrypted else 'Not protected'}")
+        self.source_label.setText(f"{info.path.name} · {'Dilindungi' if info.encrypted else 'Tidak dilindungi'}")
 
     def update_strength(self, value: str) -> None:
         score, label = password_strength(value)
         self.strength.setValue(score)
-        self.strength_label.setText(label)
+        self.strength_label.setText({"Weak": "Lemah", "Fair": "Cukup", "Strong": "Kuat"}.get(label, label))
 
     def _output(self, suffix: str) -> str:
         if not self.source:
-            QMessageBox.information(self, "Choose PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return ""
         name, _ = QFileDialog.getSaveFileName(
-            self, "Save PDF", str(self.source.with_name(f"{self.source.stem}_{suffix}.pdf")), "PDF files (*.pdf)"
+            self, "Simpan PDF", str(self.source.with_name(f"{self.source.stem}_{suffix}.pdf")), "Berkas PDF (*.pdf)"
         )
         return name
 
     def protect(self) -> None:
         if self.password.text() != self.confirm.text():
-            QMessageBox.warning(self, "Passwords do not match", "Enter the same password twice.")
+            QMessageBox.warning(self, "Kata sandi tidak cocok", "Masukkan kata sandi yang sama dua kali.")
             return
         if not self.password.text():
-            QMessageBox.warning(self, "Password required", "Enter an open password.")
+            QMessageBox.warning(self, "Kata sandi diperlukan", "Masukkan kata sandi buka.")
             return
         output = self._output("protected")
         if output:
@@ -136,7 +136,7 @@ class SecurityPage(QWidget):
 
     def unlock(self) -> None:
         if not self.unlock_password.text():
-            QMessageBox.warning(self, "Password required", "Enter the current PDF password.")
+            QMessageBox.warning(self, "Kata sandi diperlukan", "Masukkan kata sandi PDF saat ini.")
             return
         output = self._output("unlocked")
         if output:
@@ -145,17 +145,17 @@ class SecurityPage(QWidget):
     def _run(self, function, output: str, *args, **kwargs) -> None:
         if not self.source:
             return
-        self.status.setText("Processing…")
+        self.status.setText("Memproses…")
         worker = FunctionWorker(function, self.source, output, *args, **kwargs)
         self.worker = worker
         worker.signals.result.connect(self.completed)
         worker.signals.error.connect(
-            lambda message, details: QMessageBox.critical(self, "Security operation failed", message)
+            lambda message, details: QMessageBox.critical(self, "Operasi keamanan gagal", message)
         )
         worker.signals.finished.connect(lambda: setattr(self, "worker", None))
         QThreadPool.globalInstance().start(worker)
 
     def completed(self, result: object) -> None:
         output = Path(result)
-        self.status.setText(f"Saved: {output.name}")
+        self.status.setText(f"Tersimpan: {output.name}")
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(output.parent)))

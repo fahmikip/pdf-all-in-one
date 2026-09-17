@@ -59,10 +59,12 @@ class OrganizerPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 25, 32, 25)
         layout.setSpacing(11)
-        title = QLabel("Organize PDF")
+        title = QLabel("Susun PDF")
         title.setObjectName("title")
         layout.addWidget(title)
-        subtitle = QLabel("Drag pages to reorder. Use Ctrl or Shift to select multiple pages.")
+        subtitle = QLabel(
+            "Seret halaman untuk mengurutkan ulang. Gunakan Ctrl atau Shift untuk memilih banyak halaman."
+        )
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         self.drop = DropZone()
@@ -73,7 +75,7 @@ class OrganizerPage(QWidget):
         self.progress = QProgressBar()
         self.progress.hide()
         layout.addWidget(self.progress)
-        self.status = QLabel("Choose a PDF to begin")
+        self.status = QLabel("Pilih PDF untuk memulai")
         self.status.setObjectName("muted")
         layout.addWidget(self.status)
         self.grid = QListWidget()
@@ -90,20 +92,20 @@ class OrganizerPage(QWidget):
         self.grid.model().rowsMoved.connect(lambda *args: self._renumber())
         toolbar = QHBoxLayout()
         actions = [
-            ("Undo", self.undo),
-            ("Redo", self.redo),
-            ("Reset", self.reset),
-            ("Remove", self.remove_selected),
-            ("Duplicate", self.duplicate_selected),
+            ("Urungkan", self.undo),
+            ("Ulangi", self.redo),
+            ("Atur Ulang", self.reset),
+            ("Hapus", self.remove_selected),
+            ("Gandakan", self.duplicate_selected),
             ("↶ 90°", lambda: self.rotate_selected(-90)),
             ("↷ 90°", lambda: self.rotate_selected(90)),
-            ("Extract", self.extract_selected),
+            ("Ekstrak", self.extract_selected),
         ]
         for label, callback in actions:
             btn_id = ""
-            if label == "Remove":
+            if label == "Hapus":
                 btn_id = "danger"
-            elif label in ("Extract",):
+            elif label in ("Ekstrak",):
                 btn_id = "info"
             button = QPushButton(label)
             button.clicked.connect(callback)
@@ -113,14 +115,14 @@ class OrganizerPage(QWidget):
                 button.setObjectName("ghost")
             toolbar.addWidget(button)
         toolbar.addStretch()
-        save = QPushButton("Save Organized PDF")
+        save = QPushButton("Simpan PDF Tersusun")
         save.setObjectName("success")
         save.clicked.connect(self.save)
         toolbar.addWidget(save)
         layout.addLayout(toolbar)
 
     def choose(self) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if filename:
             self.open_files([filename])
 
@@ -128,7 +130,7 @@ class OrganizerPage(QWidget):
         try:
             info = validate_pdf(files[0])
         except Exception as exc:
-            QMessageBox.warning(self, "Cannot open PDF", str(exc))
+            QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
             return
         self.source = info.path
         self.grid.clear()
@@ -137,12 +139,12 @@ class OrganizerPage(QWidget):
         self.redo_stack.clear()
         self.progress.setValue(0)
         self.progress.show()
-        self.status.setText(f"Loading {info.path.name} · {info.pages} pages")
+        self.status.setText(f"Memuat {info.path.name} · {info.pages} halaman")
         worker = FunctionWorker(render_thumbnails, info.path, with_progress=True)
         self._loading_worker = worker
         worker.signals.progress.connect(lambda value, text: (self.progress.setValue(value), self.status.setText(text)))
         worker.signals.result.connect(self._thumbnails_ready)
-        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Preview failed", message))
+        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Pratinjau gagal", message))
         worker.signals.finished.connect(lambda: self.progress.hide())
         worker.signals.finished.connect(lambda: setattr(self, "_loading_worker", None))
         from PySide6.QtCore import QThreadPool
@@ -154,7 +156,7 @@ class OrganizerPage(QWidget):
         self._restore(OrganizerState(tuple(PageSpec(index) for index in range(len(self.thumbnails)))))
         self.undo_stack.clear()
         self.redo_stack.clear()
-        self.status.setText(f"Ready · {len(self.thumbnails)} pages")
+        self.status.setText(f"Siap · {len(self.thumbnails)} halaman")
 
     def _state(self) -> OrganizerState:
         pages = []
@@ -171,9 +173,9 @@ class OrganizerPage(QWidget):
                 pixmap = pixmap.transformed(
                     QTransform().rotate(spec.rotation), Qt.TransformationMode.SmoothTransformation
                 )
-            item = QListWidgetItem(QIcon(pixmap), f"Page {position}")
+            item = QListWidgetItem(QIcon(pixmap), f"Halaman {position}")
             item.setData(Qt.ItemDataRole.UserRole, (spec.source_index, spec.rotation))
-            item.setToolTip(f"Source page {spec.source_index + 1} · Rotation {spec.rotation % 360}°")
+            item.setToolTip(f"Halaman sumber {spec.source_index + 1} · Rotasi {spec.rotation % 360}°")
             self.grid.addItem(item)
 
     def _checkpoint(self) -> None:
@@ -203,7 +205,7 @@ class OrganizerPage(QWidget):
         if not rows:
             return
         if len(rows) == self.grid.count():
-            QMessageBox.information(self, "Cannot remove pages", "A PDF must contain at least one page.")
+            QMessageBox.information(self, "Tidak dapat menghapus halaman", "PDF harus memuat setidaknya satu halaman.")
             return
         self._checkpoint()
         for row in reversed(rows):
@@ -240,7 +242,7 @@ class OrganizerPage(QWidget):
 
     def _renumber(self) -> None:
         for index in range(self.grid.count()):
-            self.grid.item(index).setText(f"Page {index + 1}")
+            self.grid.item(index).setText(f"Halaman {index + 1}")
 
     def extract_selected(self) -> None:
         if not self.source or not self.selected_rows():
@@ -248,41 +250,41 @@ class OrganizerPage(QWidget):
         pages = [self._state().pages[row] for row in self.selected_rows()]
         output, _ = QFileDialog.getSaveFileName(
             self,
-            "Save extracted pages",
+            "Simpan halaman yang diekstrak",
             str(self.source.with_name(f"{self.source.stem}_extracted.pdf")),
-            "PDF files (*.pdf)",
+            "Berkas PDF (*.pdf)",
         )
         if output:
             try:
                 organize_pages(self.source, output, pages)
                 QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(output).parent)))
             except Exception as exc:
-                QMessageBox.critical(self, "Extraction failed", str(exc))
+                QMessageBox.critical(self, "Ekstraksi gagal", str(exc))
 
     def save(self) -> None:
         if not self.source:
-            QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         output, _ = QFileDialog.getSaveFileName(
             self,
-            "Save organized PDF",
+            "Simpan PDF tersusun",
             str(self.source.with_name(f"{self.source.stem}_organized.pdf")),
-            "PDF files (*.pdf)",
+            "Berkas PDF (*.pdf)",
         )
         if not output:
             return
         self.progress.setRange(0, 0)
         self.progress.show()
-        self.status.setText("Saving organized PDF…")
+        self.status.setText("Menyimpan PDF tersusun…")
         worker = FunctionWorker(organize_pages, self.source, output, self._state().pages)
         self._loading_worker = worker
         worker.signals.result.connect(
             lambda result: (
-                self.status.setText("Organized PDF saved successfully"),
+                self.status.setText("PDF tersusun tersimpan"),
                 QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(result).parent))),
             )
         )
-        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Save failed", message))
+        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Penyimpanan gagal", message))
         worker.signals.finished.connect(
             lambda: (self.progress.setRange(0, 100), self.progress.hide(), setattr(self, "_loading_worker", None))
         )

@@ -18,6 +18,7 @@ from core.utils.logger import configure_logging  # noqa: E402
 from PySide6.QtGui import QFont, QFontDatabase, QFontMetrics  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 from ui.main_window import MainWindow  # noqa: E402
+from ui.themes.palette import stylesheet_for  # noqa: E402
 
 OUT_DIR = ROOT / "docs" / "screenshots"
 
@@ -76,6 +77,7 @@ def main() -> None:
     app.setStyle("Fusion")
     _register_system_fonts()
     settings = Settings(check_updates=False)
+    app.setStyleSheet(stylesheet_for(settings.theme))
     window = MainWindow(settings, ConfigStore())
     window.resize(1280, 800)
     window.show()

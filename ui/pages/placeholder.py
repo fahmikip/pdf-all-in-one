@@ -13,6 +13,6 @@ class PlaceholderPage(QWidget):
         heading = QLabel(title)
         heading.setObjectName("title")
         layout.addWidget(heading)
-        detail = QLabel("This workspace is ready for its processing engine in the next milestone.")
+        detail = QLabel("Ruang kerja ini siap untuk mesin pemrosesnya pada milestone berikutnya.")
         detail.setObjectName("subtitle")
         layout.addWidget(detail)

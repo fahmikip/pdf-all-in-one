@@ -7,18 +7,25 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QStatusBar
 
+from ui.themes.palette import rgba
+
 
 class Footer(QStatusBar):
     def __init__(self) -> None:
         super().__init__()
         self.setStyleSheet(
-            "QStatusBar { background: #111827; border-top: 1px solid #263449; color: #94A3B8; padding: 2px 8px; }"
+            "QStatusBar {"
+            "  background: " + rgba("#1E293B", 0.45) + ";"
+            "  border-top: 1px solid " + rgba("#94A3B8", 0.25) + ";"
+            "  color: #94A3B8;"
+            "  padding: 2px 10px;"
+            "}"
         )
-        self.showMessage("Ready")
+        self.showMessage("Siap")
         identity = QLabel(
             f'<span style="color:#94A3B8;">PDF Master v{VERSION}</span>  '
             f'<span style="color:#475569;">|</span>  '
-            f'<span style="color:#94A3B8;">Developed by <b style="color:#818CF8;">{DEVELOPER}</b></span>  '
+            f'<span style="color:#94A3B8;">Dikembangkan oleh <b style="color:#818CF8;">{DEVELOPER}</b></span>  '
             f'<span style="color:#475569;">|</span>  '
             f'<a style="color:#38BDF8; text-decoration:none;" href="{GITHUB_URL}">GitHub</a>  '
             f'<span style="color:#475569;">|</span>  '

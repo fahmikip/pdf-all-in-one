@@ -24,26 +24,26 @@ class HomePage(QScrollArea):
         title = QLabel("PDF Master")
         title.setObjectName("title")
         layout.addWidget(title)
-        subtitle = QLabel("All-in-One Offline PDF Toolkit")
+        subtitle = QLabel("Perangkat PDF All-in-One Offline")
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         layout.addSpacing(6)
-        quick = QLabel("Quick actions")
+        quick = QLabel("Aksi cepat")
         quick.setObjectName("section")
         layout.addWidget(quick)
         grid = QGridLayout()
         grid.setSpacing(12)
         actions = [
-            ("compress", "Compress PDF", "Reduce file size safely", "indigo", "#4F46E5"),
-            ("merge", "Merge PDF", "Combine files in any order", "emerald", "#059669"),
-            ("split", "Split PDF", "Extract pages or ranges", "amber", "#D97706"),
-            ("convert", "Convert PDF", "PDF and image conversion", "cyan", "#0891B2"),
-            ("organize", "Organize PDF", "Reorder, rotate, remove", "violet", "#7C3AED"),
-            ("ocr", "OCR PDF", "Make scans searchable", "rose", "#E11D48"),
-            ("extract", "Extract PDF", "Pull out text and images", "teal", "#0D9488"),
-            ("layout", "Print Layout", "N-up sheets and booklets", "indigo", "#4F46E5"),
-            ("pages", "Page Tools", "Blank pages, resize, new PDF", "emerald", "#059669"),
-            ("repair", "Repair PDF", "Fix damaged documents", "amber", "#D97706"),
+            ("compress", "Kompres PDF", "Perkecil ukuran file dengan aman", "indigo", "#6366F1"),
+            ("merge", "Gabung PDF", "Gabungkan file dalam urutan apa pun", "emerald", "#10B981"),
+            ("split", "Pecah PDF", "Ekstrak halaman atau rentang", "amber", "#F59E0B"),
+            ("convert", "Konversi PDF", "Konversi PDF dan gambar", "cyan", "#06B6D4"),
+            ("organize", "Susun PDF", "Urutkan, putar, hapus halaman", "violet", "#8B5CF6"),
+            ("ocr", "OCR PDF", "Buat hasil scan dapat dicari", "rose", "#F43F5E"),
+            ("extract", "Ekstrak PDF", "Ambil teks dan gambar", "teal", "#14B8A6"),
+            ("layout", "Print Layout", "Susunan N-up dan booklet", "indigo", "#6366F1"),
+            ("pages", "Alat Halaman", "Halaman kosong, ukuran, PDF baru", "emerald", "#10B981"),
+            ("repair", "Perbaiki PDF", "Perbaiki dokumen rusak", "amber", "#F59E0B"),
         ]
         for index, (key, name, description, accent, color) in enumerate(actions):
             card = QFrame()
@@ -61,8 +61,8 @@ class HomePage(QScrollArea):
             detail = QLabel(description)
             detail.setObjectName("muted")
             card_layout.addWidget(detail)
-            btn_color = ["#4F46E5", "#059669", "#D97706", "#0891B2", "#7C3AED", "#E11D48", "#0D9488"][index % 7]
-            button = QPushButton(f"Open {name}  →")
+            btn_color = ["#6366F1", "#10B981", "#F59E0B", "#06B6D4", "#8B5CF6", "#F43F5E", "#14B8A6"][index % 7]
+            button = QPushButton(f"Buka {name}  →")
             button.setObjectName("cardAction")
             button.setStyleSheet(
                 f"QPushButton#cardAction {{ background: {btn_color}; color: white; text-align: center; font-weight: 600; "
@@ -78,9 +78,9 @@ class HomePage(QScrollArea):
         self.stat_values = []
         for index, (value, label, accent) in enumerate(
             (
-                ("0", "Total PDF Processed", "indigo"),
-                ("0 MB", "Storage Saved", "emerald"),
-                ("—", "Recent Files", "cyan"),
+                ("0", "Total PDF Diproses", "indigo"),
+                ("0 MB", "Penyimpanan Dihemat", "emerald"),
+                ("—", "File Terakhir", "cyan"),
             )
         ):
             card = QFrame()

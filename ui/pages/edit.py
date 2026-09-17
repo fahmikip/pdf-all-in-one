@@ -39,8 +39,8 @@ class EditPage(QWidget):
         title.setObjectName("title")
         layout.addWidget(title)
         source_row = QHBoxLayout()
-        self.source_label = QLabel("No PDF selected")
-        choose = QPushButton("Choose PDF")
+        self.source_label = QLabel("Belum ada PDF dipilih")
+        choose = QPushButton("Pilih PDF")
         choose.setObjectName("ghost")
         choose.clicked.connect(self.choose_pdf)
         source_row.addWidget(self.source_label, 1)
@@ -53,18 +53,18 @@ class EditPage(QWidget):
         self._header_tab()
         self._metadata_tab()
         self._editor_tab()
-        self.status = QLabel("All changes are saved to a new file.")
+        self.status = QLabel("Semua perubahan disimpan ke file baru.")
         self.status.setObjectName("muted")
         layout.addWidget(self.status)
 
     def choose_pdf(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        name, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if not name:
             return
         try:
             self.source = validate_pdf(name).path
         except Exception as exc:
-            QMessageBox.warning(self, "Cannot open PDF", str(exc))
+            QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
             return
         self.source_label.setText(self.source.name)
         self._load_metadata()
@@ -73,11 +73,11 @@ class EditPage(QWidget):
         page = QWidget()
         form = QFormLayout(page)
         self.wm_type = QComboBox()
-        self.wm_type.addItems(["Text", "Image"])
-        form.addRow("Type", self.wm_type)
-        self.wm_content = QLineEdit("CONFIDENTIAL")
-        form.addRow("Text / image path", self.wm_content)
-        browse = QPushButton("Browse image")
+        self.wm_type.addItems(["Teks", "Gambar"])
+        form.addRow("Tipe", self.wm_type)
+        self.wm_content = QLineEdit("RAHASIA")
+        form.addRow("Teks / jalur gambar", self.wm_content)
+        browse = QPushButton("Jelajahi gambar")
         browse.setObjectName("ghost")
         browse.clicked.connect(self.choose_watermark_image)
         form.addRow("", browse)
@@ -85,18 +85,18 @@ class EditPage(QWidget):
         self.wm_position.addItems(
             ["center", "top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"]
         )
-        form.addRow("Position", self.wm_position)
+        form.addRow("Posisi", self.wm_position)
         self.wm_opacity = QSpinBox()
         self.wm_opacity.setRange(5, 100)
         self.wm_opacity.setValue(25)
-        form.addRow("Opacity (%)", self.wm_opacity)
+        form.addRow("Opasitas (%)", self.wm_opacity)
         self.wm_rotation = QComboBox()
         self.wm_rotation.addItems(["0", "90", "180", "270"])
-        form.addRow("Rotation", self.wm_rotation)
+        form.addRow("Rotasi", self.wm_rotation)
         self.wm_pages = QLineEdit()
-        self.wm_pages.setPlaceholderText("All, or 1-3, 5")
-        form.addRow("Pages", self.wm_pages)
-        button = QPushButton("Add Watermark")
+        self.wm_pages.setPlaceholderText("Semua, atau 1-3, 5")
+        form.addRow("Halaman", self.wm_pages)
+        button = QPushButton("Tambahkan Watermark")
         button.setObjectName("info")
         button.clicked.connect(self.apply_watermark)
         form.addRow(button)
@@ -107,36 +107,44 @@ class EditPage(QWidget):
         form = QFormLayout(page)
         self.number_template = QComboBox()
         self.number_template.setEditable(True)
-        self.number_template.addItems(["{page}", "Page {page}", "{page} / {pages}"])
+        self.number_template.addItems(["{page}", "Halaman {page}", "{page} / {pages}"])
         form.addRow("Format", self.number_template)
         self.number_position = QComboBox()
         self.number_position.addItems(
             ["bottom-center", "bottom-left", "bottom-right", "top-center", "top-left", "top-right"]
         )
-        form.addRow("Position", self.number_position)
+        form.addRow("Posisi", self.number_position)
         self.number_start = QSpinBox()
         self.number_start.setRange(0, 999999)
         self.number_start.setValue(1)
-        form.addRow("Start number", self.number_start)
+        form.addRow("Nomor awal", self.number_start)
         self.number_pages = QLineEdit()
-        self.number_pages.setPlaceholderText("All, or 1-3, 5")
-        form.addRow("Pages", self.number_pages)
-        button = QPushButton("Add Page Numbers")
+        self.number_pages.setPlaceholderText("Semua, atau 1-3, 5")
+        form.addRow("Halaman", self.number_pages)
+        button = QPushButton("Tambahkan Nomor Halaman")
         button.setObjectName("info")
         button.clicked.connect(self.apply_numbers)
         form.addRow(button)
-        self.tabs.addTab(page, "Page Numbers")
+        self.tabs.addTab(page, "Nomor Halaman")
 
     def _header_tab(self) -> None:
         page = QWidget()
         form = QFormLayout(page)
+        label_map = {
+            "header-left": "Header Kiri",
+            "header-center": "Header Tengah",
+            "header-right": "Header Kanan",
+            "footer-left": "Footer Kiri",
+            "footer-center": "Footer Tengah",
+            "footer-right": "Footer Kanan",
+        }
         self.header_fields = {}
-        for key in ("header-left", "header-center", "header-right", "footer-left", "footer-center", "footer-right"):
+        for key in label_map:
             edit = QLineEdit()
-            edit.setPlaceholderText("Supports {page}, {pages}, {date}, {filename}")
+            edit.setPlaceholderText("Dukung {page}, {pages}, {date}, {filename}")
             self.header_fields[key] = edit
-            form.addRow(key.replace("-", " ").title(), edit)
-        button = QPushButton("Add Header & Footer")
+            form.addRow(label_map[key], edit)
+        button = QPushButton("Tambahkan Header & Footer")
         button.setObjectName("info")
         button.clicked.connect(self.apply_header)
         form.addRow(button)
@@ -151,10 +159,10 @@ class EditPage(QWidget):
             self.metadata_fields[key] = edit
             form.addRow(key.title(), edit)
         row = QHBoxLayout()
-        save = QPushButton("Save Metadata")
+        save = QPushButton("Simpan Metadata")
         save.setObjectName("success")
         save.clicked.connect(lambda: self.apply_metadata(False))
-        clear = QPushButton("Clear Metadata")
+        clear = QPushButton("Bersihkan Metadata")
         clear.setObjectName("ghost")
         clear.clicked.connect(lambda: self.apply_metadata(True))
         row.addWidget(save)
@@ -163,39 +171,39 @@ class EditPage(QWidget):
         self.tabs.addTab(page, "Metadata")
 
     def choose_watermark_image(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, "Choose watermark image", "", "Images (*.png *.jpg *.jpeg *.webp)")
+        name, _ = QFileDialog.getOpenFileName(self, "Pilih gambar watermark", "", "Gambar (*.png *.jpg *.jpeg *.webp)")
         if name:
-            self.wm_type.setCurrentText("Image")
+            self.wm_type.setCurrentText("Gambar")
             self.wm_content.setText(name)
 
     def _editor_tab(self) -> None:
-        self.tabs.addTab(EditorPage(), "Insert & Edit")
+        self.tabs.addTab(EditorPage(), "Sisip & Edit")
 
     def _output(self, suffix: str) -> str:
         if not self.source:
-            QMessageBox.information(self, "Choose PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return ""
         name, _ = QFileDialog.getSaveFileName(
             self,
-            "Save edited PDF",
+            "Simpan PDF hasil edit",
             str(self.source.with_name(f"{self.source.stem}_{suffix}.pdf")),
-            "PDF files (*.pdf)",
+            "Berkas PDF (*.pdf)",
         )
         return name
 
     def _run(self, function, output: str, *args, **kwargs) -> None:
         if not self.source or not output:
             return
-        self.status.setText("Processing…")
+        self.status.setText("Memproses…")
         worker = FunctionWorker(function, self.source, output, *args, **kwargs)
         self.worker = worker
         worker.signals.result.connect(lambda result: self._complete(Path(result)))
-        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Edit failed", message))
+        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Edit gagal", message))
         worker.signals.finished.connect(lambda: setattr(self, "worker", None))
         QThreadPool.globalInstance().start(worker)
 
     def _complete(self, output: Path) -> None:
-        self.status.setText(f"Saved: {output.name}")
+        self.status.setText(f"Tersimpan: {output.name}")
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(output.parent)))
 
     def apply_watermark(self) -> None:

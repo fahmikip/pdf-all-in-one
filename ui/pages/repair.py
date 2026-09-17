@@ -30,8 +30,8 @@ class RepairPage(ToolPage):
         self.sources: dict[str, Path | None] = {"repair": None, "linearize": None}
         self.action = ""
         tabs = QTabWidget()
-        tabs.addTab(self._repair_tab(), "Repair PDF")
-        tabs.addTab(self._linearize_tab(), "Fast Web View")
+        tabs.addTab(self._repair_tab(), "Perbaiki PDF")
+        tabs.addTab(self._linearize_tab(), "Tampilan Web Cepat")
         self.layout.insertWidget(2, tabs)
         self.layout.addStretch()
 
@@ -39,7 +39,7 @@ class RepairPage(ToolPage):
         row = QHBoxLayout()
         label = QLabel(message)
         label.setObjectName("muted")
-        choose = QPushButton("Choose PDF")
+        choose = QPushButton("Pilih PDF")
         choose.setObjectName("ghost")
         choose.clicked.connect(lambda: self.choose(key, label))
         row.addWidget(label, 1)
@@ -49,14 +49,14 @@ class RepairPage(ToolPage):
     def _repair_tab(self) -> QWidget:
         tab = QWidget()
         box = QVBoxLayout(tab)
-        box.addLayout(self._choose_row("repair", "No PDF selected"))
-        run = QPushButton("Repair & Save")
+        box.addLayout(self._choose_row("repair", "Belum ada PDF dipilih"))
+        run = QPushButton("Perbaiki & Simpan")
         run.setObjectName("warning")
         run.clicked.connect(self.start_repair)
         box.addWidget(run)
         hint = QLabel(
-            "Repair rebuilds the file structure with qpdf (or the built-in engine). "
-            "Severe container corruption may still be unrecoverable."
+            "Perbaikan membangun ulang struktur file dengan qpdf (atau mesin bawaan). "
+            "Kerusakan kontainer parah mungkin tetap tidak dapat dipulihkan."
         )
         hint.setObjectName("muted")
         box.addWidget(hint)
@@ -66,13 +66,13 @@ class RepairPage(ToolPage):
     def _linearize_tab(self) -> QWidget:
         tab = QWidget()
         box = QVBoxLayout(tab)
-        box.addLayout(self._choose_row("linearize", "No PDF selected"))
-        run = QPushButton("Linearize PDF")
+        box.addLayout(self._choose_row("linearize", "Belum ada PDF dipilih"))
+        run = QPushButton("Linearisasi PDF")
         run.setObjectName("success")
         run.clicked.connect(self.start_linearize)
         box.addWidget(run)
         hint = QLabel(
-            "Linearized (Fast Web View) files display page by page while downloading, perfect for sharing online."
+            "File linearisasi (Tampilan Web Cepat) menampilkan halaman per halaman saat diunduh, cocok untuk dibagikan daring."
         )
         hint.setObjectName("muted")
         box.addWidget(hint)
@@ -81,7 +81,7 @@ class RepairPage(ToolPage):
 
     def choose(self, key: str, label: QLabel) -> None:
         name, _ = QFileDialog.getOpenFileName(
-            self, "Choose PDF" if key == "linearize" else "Choose PDF to repair", "", "PDF files (*.pdf)"
+            self, "Pilih PDF" if key == "linearize" else "Pilih PDF untuk diperbaiki", "", "Berkas PDF (*.pdf)"
         )
         if not name:
             return
@@ -90,10 +90,10 @@ class RepairPage(ToolPage):
             try:
                 info = validate_pdf(path)
             except Exception as exc:
-                QMessageBox.warning(self, "Cannot open PDF", str(exc))
+                QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
                 return
             self.sources[key] = info.path
-            label.setText(f"{info.path.name} · {info.pages} pages")
+            label.setText(f"{info.path.name} · {info.pages} halaman")
         else:
             self.sources[key] = path
             label.setText(path.name)
@@ -101,10 +101,13 @@ class RepairPage(ToolPage):
     def start_repair(self) -> None:
         source = self.sources.get("repair")
         if not source:
-            QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         output, _ = QFileDialog.getSaveFileName(
-            self, "Save repaired PDF", str(source.with_name(f"{source.stem}_repaired.pdf")), "PDF files (*.pdf)"
+            self,
+            "Simpan PDF yang diperbaiki",
+            str(source.with_name(f"{source.stem}_repaired.pdf")),
+            "Berkas PDF (*.pdf)",
         )
         if not output:
             return
@@ -115,10 +118,10 @@ class RepairPage(ToolPage):
     def start_linearize(self) -> None:
         source = self.sources.get("linearize")
         if not source:
-            QMessageBox.information(self, "Select a PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         output, _ = QFileDialog.getSaveFileName(
-            self, "Save linearized PDF", str(source.with_name(f"{source.stem}_web.pdf")), "PDF files (*.pdf)"
+            self, "Simpan PDF linearisasi", str(source.with_name(f"{source.stem}_web.pdf")), "Berkas PDF (*.pdf)"
         )
         if not output:
             return
@@ -132,19 +135,19 @@ class RepairPage(ToolPage):
         if output is None or self.source is None:
             return
         if self.action == "repair":
-            self.status.setText(f"Repaired: {output.name}")
+            self.status.setText(f"Diperbaiki: {output.name}")
             HistoryStore().add(
                 self.source.name,
-                "Repair PDF",
+                "Perbaiki PDF",
                 self.source.stat().st_size,
                 output.stat().st_size,
                 str(output),
             )
         elif self.action == "linearize":
-            self.status.setText(f"Linearized: {output.name}")
+            self.status.setText(f"Linearisasi: {output.name}")
             HistoryStore().add(
                 self.source.name,
-                "Fast Web View",
+                "Tampilan Web Cepat",
                 self.source.stat().st_size,
                 output.stat().st_size,
                 str(output),

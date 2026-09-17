@@ -31,18 +31,18 @@ class OcrPage(QWidget):
         title = QLabel("OCR")
         title.setObjectName("title")
         layout.addWidget(title)
-        subtitle = QLabel("Turn scanned PDFs and images into searchable PDFs or text.")
+        subtitle = QLabel("Ubah PDF hasil pindai dan gambar menjadi PDF yang dapat dicari atau teks.")
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         self.dependency = QLabel()
         layout.addWidget(self.dependency)
-        locate = QPushButton("Locate Tesseract")
+        locate = QPushButton("Temukan Tesseract")
         locate.setObjectName("ghost")
         locate.clicked.connect(self.locate)
         layout.addWidget(locate)
         row = QHBoxLayout()
-        self.source_label = QLabel("No file selected")
-        choose = QPushButton("Choose PDF or Image")
+        self.source_label = QLabel("Belum ada file dipilih")
+        choose = QPushButton("Pilih PDF atau Gambar")
         choose.setObjectName("ghost")
         choose.clicked.connect(self.choose)
         row.addWidget(self.source_label, 1)
@@ -50,9 +50,9 @@ class OcrPage(QWidget):
         layout.addLayout(row)
         form = QFormLayout()
         self.language = QComboBox()
-        form.addRow("Language", self.language)
+        form.addRow("Bahasa", self.language)
         self.output_format = QComboBox()
-        self.output_format.addItems(["Searchable PDF", "Text File"])
+        self.output_format.addItems(["PDF yang Dapat Dicari", "File Teks"])
         form.addRow("Output", self.output_format)
         self.dpi = QComboBox()
         self.dpi.addItems(["150", "200", "300"])
@@ -62,10 +62,10 @@ class OcrPage(QWidget):
         self.progress = QProgressBar()
         self.progress.hide()
         layout.addWidget(self.progress)
-        self.status = QLabel("OCR runs locally. Documents are never uploaded.")
+        self.status = QLabel("OCR berjalan secara lokal. Dokumen tidak pernah diunggah.")
         self.status.setObjectName("muted")
         layout.addWidget(self.status)
-        process = QPushButton("Start OCR")
+        process = QPushButton("Mulai OCR")
         process.setObjectName("info")
         process.clicked.connect(self.start)
         layout.addWidget(process)
@@ -85,12 +85,12 @@ class OcrPage(QWidget):
         self.dependency.setText(
             f"Tesseract: {self.executable}"
             if self.executable
-            else "Tesseract: Not Found — install it or locate tesseract.exe"
+            else "Tesseract: Tidak Ditemukan — pasang aplikasinya atau cari tesseract.exe"
         )
 
     def locate(self) -> None:
         name, _ = QFileDialog.getOpenFileName(
-            self, "Locate Tesseract", r"C:\Program Files", "tesseract.exe (tesseract.exe)"
+            self, "Temukan Tesseract", r"C:\Program Files", "tesseract.exe (tesseract.exe)"
         )
         if name:
             self.executable = find_tesseract(name)
@@ -98,7 +98,7 @@ class OcrPage(QWidget):
 
     def choose(self) -> None:
         name, _ = QFileDialog.getOpenFileName(
-            self, "Choose file", "", "Supported files (*.pdf *.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff)"
+            self, "Pilih file", "", "File didukung (*.pdf *.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff)"
         )
         if name:
             self.source = Path(name).resolve()
@@ -107,20 +107,20 @@ class OcrPage(QWidget):
     def start(self) -> None:
         if not self.executable:
             QMessageBox.warning(
-                self, "Tesseract required", "Tesseract OCR was not found. Install it or use Locate Tesseract."
+                self, "Tesseract diperlukan", "Tesseract OCR tidak ditemukan. Pasang atau gunakan Temukan Tesseract."
             )
             return
         if not self.source:
-            QMessageBox.information(self, "Choose file", "Choose a PDF or image first.")
+            QMessageBox.information(self, "Pilih file", "Pilih PDF atau gambar terlebih dahulu.")
             return
         if self.language.count() == 0:
-            QMessageBox.warning(self, "Language data missing", "No Tesseract language data was found.")
+            QMessageBox.warning(self, "Data bahasa tidak ada", "Tidak ada data bahasa Tesseract ditemukan.")
             return
-        pdf_output = self.output_format.currentText() == "Searchable PDF"
+        pdf_output = self.output_format.currentText() == "PDF yang Dapat Dicari"
         suffix = ".pdf" if pdf_output else ".txt"
         output, _ = QFileDialog.getSaveFileName(
             self,
-            "Save OCR output",
+            "Simpan hasil OCR",
             str(self.source.with_name(f"{self.source.stem}_ocr{suffix}")),
             f"Output (*{suffix})",
         )
@@ -139,11 +139,11 @@ class OcrPage(QWidget):
             lambda value, detail: (self.progress.setValue(value), self.status.setText(detail))
         )
         worker.signals.result.connect(self.complete)
-        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "OCR failed", message))
+        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "OCR gagal", message))
         worker.signals.finished.connect(lambda: (self.progress.hide(), setattr(self, "worker", None)))
         QThreadPool.globalInstance().start(worker)
 
     def complete(self, result: object) -> None:
         output = Path(result)
-        self.status.setText(f"OCR complete: {output.name}")
+        self.status.setText(f"OCR selesai: {output.name}")
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(output.parent)))

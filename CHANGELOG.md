@@ -4,6 +4,17 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-17
+
+### Ditambahkan
+- **Desain ulang UI dengan efek kaca (glassmorphism)**: panel semi-transparan dengan gradasi aurora + orb radial di latar belakang, tersedia untuk tema **terang dan gelap**. Sidebar, footer, kartu beranda, dan drop zone ikut disesuaikan.
+- Seluruh antarmuka kini berbahasa **Indonesia** di semua halaman (beranda, kompres, gabung, pecah, susun, konversi, edit/editor, formulir & tanda tangan, keamanan, riwayat, OCR, ekstrak, batch, print layout, page tools, perbaiki, pengaturan, tentang, dan dialog pembaruan).
+
+### Diubah
+- Halaman kompres kini menghormati **level kompresi bawaan** dari pengaturan, dan **kompresi agresif otomatis tercentang** (dengan konfirmasi saat memulai).
+- Kombinasi nilai yang diterjemahkan (tema, level kompresi, orientasi/margin, mode fit, posisi tanda tangan) tetap menyimpan nilai internal yang benar (mis. `theme=dark`, `level=recommended`) agar mesin inti tidak berubah.
+- Skrip screenshot kini menerapkan stylesheet tema sehingga tangkapan layar README mencerminkan tampilan kaca yang sebenarnya.
+
 ## [1.6.3] - 2026-09-17
 
 ### Diperbaiki

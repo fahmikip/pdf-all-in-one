@@ -203,20 +203,20 @@ class EditorPage(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         top = QHBoxLayout()
-        choose = QPushButton("Choose PDF")
+        choose = QPushButton("Pilih PDF")
         choose.setObjectName("ghost")
         choose.clicked.connect(self._choose_pdf)
         top.addWidget(choose)
-        self.source_label = QLabel("No PDF selected")
+        self.source_label = QLabel("Belum ada PDF dipilih")
         self.source_label.setObjectName("muted")
         top.addWidget(self.source_label, 1)
-        top.addWidget(QLabel("Page"))
+        top.addWidget(QLabel("Halaman"))
         self.page_spin = QSpinBox()
         self.page_spin.setRange(1, 1)
         self.page_spin.setEnabled(False)
         self.page_spin.valueChanged.connect(self._switch_page)
         top.addWidget(self.page_spin)
-        self.save_btn = QPushButton("Save PDF")
+        self.save_btn = QPushButton("Simpan PDF")
         self.save_btn.setObjectName("success")
         self.save_btn.setEnabled(False)
         self.save_btn.clicked.connect(self._save)
@@ -226,15 +226,15 @@ class EditorPage(QWidget):
         middle = QHBoxLayout()
         controls = QVBoxLayout()
         actions = QHBoxLayout()
-        add_image = QPushButton("Add Image")
+        add_image = QPushButton("Tambah Gambar")
         add_image.setObjectName("info")
         add_image.clicked.connect(self._add_image)
         actions.addWidget(add_image)
-        add_text = QPushButton("Add Text")
+        add_text = QPushButton("Tambah Teks")
         add_text.setObjectName("success")
         add_text.clicked.connect(self._add_text)
         actions.addWidget(add_text)
-        delete = QPushButton("Delete")
+        delete = QPushButton("Hapus")
         delete.setObjectName("danger")
         delete.clicked.connect(self._delete_selected)
         actions.addWidget(delete)
@@ -250,11 +250,11 @@ class EditorPage(QWidget):
         self.size_spin.setRange(6, 300)
         self.size_spin.setValue(16)
         self.size_spin.valueChanged.connect(self._apply_text_style)
-        text_form.addRow("Size (pt)", self.size_spin)
-        self.color_btn = QPushButton("Black")
+        text_form.addRow("Ukuran (pt)", self.size_spin)
+        self.color_btn = QPushButton("Hitam")
         self.color_btn.clicked.connect(self._pick_color)
         self._refresh_color_btn()
-        text_form.addRow("Color", self.color_btn)
+        text_form.addRow("Warna", self.color_btn)
         controls.addWidget(self.text_group)
 
         self.image_group = QWidget()
@@ -262,10 +262,10 @@ class EditorPage(QWidget):
         image_form.setContentsMargins(0, 8, 0, 0)
         self.width_spin = QSpinBox()
         self.width_spin.setRange(5, 100)
-        self.width_spin.setSuffix(" % of page")
+        self.width_spin.setSuffix(" % halaman")
         self.width_spin.setValue(50)
         self.width_spin.valueChanged.connect(self._apply_image_width)
-        image_form.addRow("Size", self.width_spin)
+        image_form.addRow("Ukuran", self.width_spin)
         controls.addWidget(self.image_group)
         controls.addStretch(1)
         middle.addLayout(controls)
@@ -278,7 +278,9 @@ class EditorPage(QWidget):
         middle.addWidget(self.view, 1)
         root.addLayout(middle, 1)
 
-        self.status = QLabel("Choose a PDF, then add photos and text. Drag to position, resize via corner handles.")
+        self.status = QLabel(
+            "Pilih PDF, lalu tambahkan foto dan teks. Seret untuk memposisikan, ubah ukuran lewat gagang sudut."
+        )
         self.status.setObjectName("muted")
         root.addWidget(self.status)
         self._sync_groups()
@@ -289,7 +291,7 @@ class EditorPage(QWidget):
         )
 
     def _choose_pdf(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, "Choose PDF", "", "PDF files (*.pdf)")
+        name, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if not name:
             return
         try:
@@ -297,7 +299,7 @@ class EditorPage(QWidget):
             with pymupdf.open(info.path) as document:
                 width = document[0].rect.width
         except Exception as exc:
-            QMessageBox.warning(self, "Cannot open PDF", str(exc))
+            QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
             return
         self.source = info.path
         self.zoom = max(1.0, min(2.5, 860 / width))
@@ -314,7 +316,9 @@ class EditorPage(QWidget):
         self.save_btn.setEnabled(True)
         self._page_index = 0
         self._load_page(0)
-        self.status.setText(f"{info.pages} page(s) loaded. Drag objects; resize with corner dots; save to a new PDF.")
+        self.status.setText(
+            f"{info.pages} halaman dimuat. Seret objek; ubah ukuran dengan titik sudut; simpan ke PDF baru."
+        )
 
     def _render_page(self, index: int) -> QPixmap:
         if index in self._pages:
@@ -354,14 +358,14 @@ class EditorPage(QWidget):
 
     def _add_image(self) -> None:
         if self.source is None:
-            QMessageBox.information(self, "Choose PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
-        name, _ = QFileDialog.getOpenFileName(self, "Choose photo or image", "", self.IMAGE_FILTER)
+        name, _ = QFileDialog.getOpenFileName(self, "Pilih foto atau gambar", "", self.IMAGE_FILTER)
         if not name:
             return
         pixmap = QPixmap(name)
         if pixmap.isNull():
-            QMessageBox.warning(self, "Cannot open image", "That image file could not be read.")
+            QMessageBox.warning(self, "Tidak Dapat Membuka Gambar", "File gambar tersebut tidak dapat dibaca.")
             return
         page_pixmap = self._render_page(self._page_index)
         width = page_pixmap.width() * 0.5
@@ -373,12 +377,12 @@ class EditorPage(QWidget):
         self.scene.addItem(item)
         self.page_objects.setdefault(self._page_index, []).append(item)
         item.setSelected(True)
-        self.status.setText("Image added. Drag to position; use corner dots to resize.")
+        self.status.setText("Gambar ditambahkan. Seret untuk memposisikan; gunakan titik sudut untuk mengubah ukuran.")
         self._sync_controls()
 
     def _add_text(self) -> None:
         if self.source is None:
-            QMessageBox.information(self, "Choose PDF", "Choose a PDF first.")
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         page_pixmap = self._render_page(self._page_index)
         item = TextItem(
@@ -393,7 +397,7 @@ class EditorPage(QWidget):
         self.scene.addItem(item)
         self.page_objects.setdefault(self._page_index, []).append(item)
         item.setSelected(True)
-        self.status.setText("Text added. Double-click the text to edit it.")
+        self.status.setText("Teks ditambahkan. Klik dua kali teks untuk mengeditnya.")
 
     def _delete_selected(self) -> None:
         for item in list(self.scene.selectedItems()):
@@ -417,7 +421,7 @@ class EditorPage(QWidget):
         item.apply_style(self.font_combo.currentFont().family(), self.size_spin.value(), self._text_color)
 
     def _pick_color(self) -> None:
-        color = QColorDialog.getColor(self._text_color, self, "Text color")
+        color = QColorDialog.getColor(self._text_color, self, "Warna teks")
         if not color.isValid():
             return
         self._text_color = color
@@ -485,18 +489,21 @@ class EditorPage(QWidget):
             return
         items = self._build_items()
         name, _ = QFileDialog.getSaveFileName(
-            self, "Save edited PDF", str(self.source.with_name(f"{self.source.stem}_edited.pdf")), "PDF files (*.pdf)"
+            self,
+            "Simpan PDF hasil edit",
+            str(self.source.with_name(f"{self.source.stem}_edited.pdf")),
+            "Berkas PDF (*.pdf)",
         )
         if not name:
             return
         name = name if name.lower().endswith(".pdf") else name + ".pdf"
-        self.status.setText("Processing…")
+        self.status.setText("Memproses…")
         worker = FunctionWorker(insert_objects, self.source, Path(name), page_index=self._page_index, items=items)
         worker.signals.result.connect(self._saved)
-        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Save failed", message))
-        worker.signals.finished.connect(lambda: self.status.setText(f"Saved: {Path(name).name}"))
+        worker.signals.error.connect(lambda message, details: QMessageBox.critical(self, "Penyimpanan gagal", message))
+        worker.signals.finished.connect(lambda: self.status.setText(f"Tersimpan: {Path(name).name}"))
         QThreadPool.globalInstance().start(worker)
 
     def _saved(self, output) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(output).parent)))
-        self.status.setText(f"Saved: {Path(output).name}")
+        self.status.setText(f"Tersimpan: {Path(output).name}")

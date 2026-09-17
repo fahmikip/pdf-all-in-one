@@ -5,6 +5,7 @@ from collections.abc import Callable
 from app.config import ConfigStore, Settings, local_data_dir
 from core.utils.history import HistoryStore
 from core.utils.system_utils import dependency_status
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -25,6 +26,8 @@ from ui.themes.palette import stylesheet_for
 
 
 class SettingsPage(QWidget):
+    theme_changed = Signal(str)
+
     def __init__(
         self, settings: Settings, store: ConfigStore, on_check_updates: Callable[[], None] | None = None
     ) -> None:
@@ -33,58 +36,67 @@ class SettingsPage(QWidget):
         self.store = store
         layout = QVBoxLayout(self)
         layout.setContentsMargins(36, 28, 36, 28)
-        title = QLabel("Settings")
+        title = QLabel("Pengaturan")
         title.setObjectName("title")
         layout.addWidget(title)
         form = QFormLayout()
         self.theme = QComboBox()
-        self.theme.addItems(["System", "Light", "Dark"])
-        self.theme.setCurrentText(settings.theme.title())
-        form.addRow("Theme", self.theme)
-        self.output = QLabel(settings.default_output_folder or "Ask each time")
-        choose = QPushButton("Choose Folder")
+        for label, value in (("Sistem", "system"), ("Terang", "light"), ("Gelap", "dark")):
+            self.theme.addItem(label, value)
+        index = self.theme.findData(settings.theme.lower()) if settings.theme else 0
+        self.theme.setCurrentIndex(index if index >= 0 else 0)
+        form.addRow("Tema", self.theme)
+        self.output = QLabel(settings.default_output_folder or "Tanya setiap kali")
+        choose = QPushButton("Pilih Folder")
         choose.setObjectName("ghost")
         choose.clicked.connect(self.choose_output)
         output_row = QHBoxLayout()
         output_row.addWidget(self.output, 1)
         output_row.addWidget(choose)
-        form.addRow("Default output", output_row)
+        form.addRow("Output bawaan", output_row)
         self.compression = QComboBox()
-        self.compression.addItems(["Low", "Recommended", "High", "Maximum"])
-        self.compression.setCurrentText(settings.default_compression.title())
-        form.addRow("Default compression", self.compression)
+        for label, value in (
+            ("Rendah", "low"),
+            ("Disarankan", "recommended"),
+            ("Tinggi", "high"),
+            ("Maksimum", "maximum"),
+        ):
+            self.compression.addItem(label, value)
+        index = self.compression.findData(settings.default_compression.lower()) if settings.default_compression else 1
+        self.compression.setCurrentIndex(index if index >= 0 else 1)
+        form.addRow("Kompresi bawaan", self.compression)
         self.dpi = QComboBox()
         self.dpi.addItems(["72", "96", "150", "200", "300", "600"])
         self.dpi.setCurrentText(str(settings.default_dpi))
-        form.addRow("Default DPI", self.dpi)
-        self.update_checks = QCheckBox("Notify me when a new GitHub release is available")
+        form.addRow("DPI bawaan", self.dpi)
+        self.update_checks = QCheckBox("Beri tahu saya saat rilis GitHub baru tersedia")
         self.update_checks.setChecked(settings.check_updates)
-        form.addRow("Updates", self.update_checks)
+        form.addRow("Pembaruan", self.update_checks)
         if on_check_updates is not None:
-            check = QPushButton("Check Now")
+            check = QPushButton("Periksa Sekarang")
             check.setObjectName("ghost")
             check.clicked.connect(on_check_updates)
             form.addRow("", check)
-        save = QPushButton("Save Settings")
+        save = QPushButton("Simpan Pengaturan")
         save.setObjectName("success")
         save.clicked.connect(self.save)
         form.addRow(save)
         layout.addLayout(form)
-        heading = QLabel("Dependencies")
+        heading = QLabel("Dependensi")
         heading.setObjectName("section")
         layout.addWidget(heading)
         self.dependencies = QTableWidget(0, 2)
-        self.dependencies.setHorizontalHeaderLabels(["Component", "Status / Location"])
+        self.dependencies.setHorizontalHeaderLabels(["Komponen", "Status / Lokasi"])
         self.dependencies.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self.dependencies)
         actions = QHBoxLayout()
-        refresh = QPushButton("Refresh Dependencies")
+        refresh = QPushButton("Muat Ulang Dependensi")
         refresh.setObjectName("ghost")
         refresh.clicked.connect(self.refresh)
-        clear_temp = QPushButton("Clear Temporary Files")
+        clear_temp = QPushButton("Bersihkan File Sementara")
         clear_temp.setObjectName("ghost")
         clear_temp.clicked.connect(self.clear_temp)
-        clear_history = QPushButton("Clear History")
+        clear_history = QPushButton("Bersihkan Riwayat")
         clear_history.setObjectName("danger")
         clear_history.clicked.connect(lambda: HistoryStore().clear())
         for button in (refresh, clear_temp, clear_history):
@@ -94,19 +106,20 @@ class SettingsPage(QWidget):
         self.refresh()
 
     def choose_output(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, "Default output folder", self.settings.default_output_folder)
+        folder = QFileDialog.getExistingDirectory(self, "Folder output bawaan", self.settings.default_output_folder)
         if folder:
             self.settings.default_output_folder = folder
             self.output.setText(folder)
 
     def save(self) -> None:
-        self.settings.theme = self.theme.currentText().lower()
-        self.settings.default_compression = self.compression.currentText().lower()
+        self.settings.theme = self.theme.currentData()
+        self.settings.default_compression = self.compression.currentData()
         self.settings.default_dpi = int(self.dpi.currentText())
         self.settings.check_updates = self.update_checks.isChecked()
         self.store.save(self.settings)
         QApplication.instance().setStyleSheet(stylesheet_for(self.settings.theme))
-        QMessageBox.information(self, "Settings saved", "Your settings were saved locally.")
+        self.theme_changed.emit(self.settings.theme)
+        QMessageBox.information(self, "Pengaturan tersimpan", "Pengaturan Anda disimpan secara lokal.")
 
     def refresh(self) -> None:
         status = dependency_status()
@@ -124,4 +137,4 @@ class SettingsPage(QWidget):
                 if path.is_file():
                     path.unlink(missing_ok=True)
                     count += 1
-        QMessageBox.information(self, "Temporary files", f"Removed {count} temporary file(s).")
+        QMessageBox.information(self, "File sementara", f"Dihapus {count} file sementara.")
