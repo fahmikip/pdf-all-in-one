@@ -8,8 +8,6 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QLinearGradient, QPainter, QRadialGradient
 from PySide6.QtWidgets import QWidget
 
-from ui.themes.palette import rgba
-
 
 @dataclass(frozen=True)
 class _Orb:
@@ -21,10 +19,10 @@ class _Orb:
 
 
 _LIGHT = (
-    QColor("#EEF2FF"),
-    QColor("#E0E7FF"),
-    QColor("#EDE9FE"),
-    QColor("#DDF6FF"),
+    QColor("#F2F4F8"),
+    QColor("#E8EDF5"),
+    QColor("#EEF1F8"),
+    QColor("#EDF5F9"),
 )
 
 _DARK = (
@@ -35,10 +33,10 @@ _DARK = (
 )
 
 _ORBS_LIGHT = (
-    _Orb(0.06, 0.05, 340, "#6366F1", 0.28),
-    _Orb(0.92, 0.12, 300, "#22D3EE", 0.22),
-    _Orb(0.82, 0.78, 360, "#A78BFA", 0.24),
-    _Orb(0.10, 0.85, 260, "#34D399", 0.14),
+    _Orb(0.06, 0.05, 340, "#6366F1", 0.10),
+    _Orb(0.92, 0.12, 300, "#38BDF8", 0.08),
+    _Orb(0.82, 0.78, 360, "#A78BFA", 0.10),
+    _Orb(0.10, 0.85, 260, "#34D399", 0.06),
 )
 
 _ORBS_DARK = (
@@ -80,7 +78,10 @@ class Backdrop(QWidget):
             center = (orb.x * width, orb.y * height)
             radius = orb.radius * min(width, height) / 800
             glow = QRadialGradient(center[0], center[1], radius)
-            glow.setColorAt(0.0, QColor(rgba(orb.color, orb.alpha)))
-            glow.setColorAt(0.7, QColor(rgba(orb.color, orb.alpha * 0.45)))
-            glow.setColorAt(1.0, QColor(rgba(orb.color, 0.0)))
+            halo = QColor(orb.color)
+            halo.setAlphaF(orb.alpha)
+            fade = QColor(orb.color)
+            fade.setAlpha(0)
+            glow.setColorAt(0.0, halo)
+            glow.setColorAt(1.0, fade)
             painter.fillRect(rect, glow)

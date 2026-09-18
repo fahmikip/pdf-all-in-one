@@ -61,13 +61,8 @@ class HomePage(QScrollArea):
             detail = QLabel(description)
             detail.setObjectName("muted")
             card_layout.addWidget(detail)
-            btn_color = ["#6366F1", "#10B981", "#F59E0B", "#06B6D4", "#8B5CF6", "#F43F5E", "#14B8A6"][index % 7]
             button = QPushButton(f"Buka {name}  →")
             button.setObjectName("cardAction")
-            button.setStyleSheet(
-                f"QPushButton#cardAction {{ background: {btn_color}; color: white; text-align: center; font-weight: 600; "
-                f"padding: 9px 14px; border-radius: 8px; border: none; }}"
-            )
             button.clicked.connect(lambda checked=False, tool=key: self.tool_requested.emit(tool))
             card_layout.addWidget(button)
             grid.addWidget(card, index // 3, index % 3)

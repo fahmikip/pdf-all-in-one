@@ -11,27 +11,48 @@ from ui.themes.palette import rgba
 
 
 class Footer(QStatusBar):
-    def __init__(self) -> None:
+    def __init__(self, dark: bool = False) -> None:
         super().__init__()
+        self._dark = dark
+        self._colors = {}
+        self.identity = QLabel()
+        self.identity.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        self.identity.setOpenExternalLinks(False)
+        self.identity.linkActivated.connect(lambda url: QDesktopServices.openUrl(QUrl(url)))
+        self.addPermanentWidget(self.identity)
+        self.set_dark(dark)
+
+    def set_dark(self, dark: bool) -> None:
+        self._dark = dark
+        if dark:
+            self._colors = {
+                "bar_bg": rgba("#1E293B", 0.45),
+                "bar_border": rgba("#94A3B8", 0.25),
+                "text": "#94A3B8",
+                "sep": "#475569",
+                "link": "#A5B4FC",
+            }
+        else:
+            self._colors = {
+                "bar_bg": rgba("#FFFFFF", 0.55),
+                "bar_border": rgba("#64748B", 0.22),
+                "text": "#64748B",
+                "sep": "#CBD5E1",
+                "link": "#4F46E5",
+            }
         self.setStyleSheet(
-            "QStatusBar {"
-            "  background: " + rgba("#1E293B", 0.45) + ";"
-            "  border-top: 1px solid " + rgba("#94A3B8", 0.25) + ";"
-            "  color: #94A3B8;"
-            "  padding: 2px 10px;"
-            "}"
+            f"QStatusBar {{ background: {self._colors['bar_bg']}; "
+            f"border-top: 1px solid {self._colors['bar_border']}; "
+            f"color: {self._colors['text']}; padding: 2px 10px; }}"
         )
         self.showMessage("Siap")
-        identity = QLabel(
-            f'<span style="color:#94A3B8;">PDF Master v{VERSION}</span>  '
-            f'<span style="color:#475569;">|</span>  '
-            f'<span style="color:#94A3B8;">Dikembangkan oleh <b style="color:#818CF8;">{DEVELOPER}</b></span>  '
-            f'<span style="color:#475569;">|</span>  '
-            f'<a style="color:#38BDF8; text-decoration:none;" href="{GITHUB_URL}">GitHub</a>  '
-            f'<span style="color:#475569;">|</span>  '
-            f'<span style="color:#94A3B8;">\u00a9 2026 {DEVELOPER}</span>'
+        self.identity.setText(
+            f'<span style="color:{self._colors["text"]};">PDF Master v{VERSION}</span>  '
+            f'<span style="color:{self._colors["sep"]};">|</span>  '
+            f'<span style="color:{self._colors["text"]};">Dikembangkan oleh '
+            f'<b style="color:{self._colors["link"]};">{DEVELOPER}</b></span>  '
+            f'<span style="color:{self._colors["sep"]};">|</span>  '
+            f'<a style="color:{self._colors["link"]}; text-decoration:none;" href="{GITHUB_URL}">GitHub</a>  '
+            f'<span style="color:{self._colors["sep"]};">|</span>  '
+            f'<span style="color:{self._colors["text"]};">\u00a9 2026 {DEVELOPER}</span>'
         )
-        identity.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-        identity.setOpenExternalLinks(False)
-        identity.linkActivated.connect(lambda url: QDesktopServices.openUrl(QUrl(url)))
-        self.addPermanentWidget(identity)

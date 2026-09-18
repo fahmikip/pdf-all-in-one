@@ -94,16 +94,19 @@ class MainWindow(QMainWindow):
             "pages": PageToolsPage(),
             "repair": RepairPage(),
         }
+        self.footer = Footer(dark_mode(settings.theme))
+        self.setStatusBar(self.footer)
         settings_page = self.pages["settings"]
         if isinstance(settings_page, SettingsPage):
-            settings_page.theme_changed.connect(lambda theme: self.backdrop.set_dark(dark_mode(theme)))
+            settings_page.theme_changed.connect(
+                lambda theme: (self.backdrop.set_dark(dark_mode(theme)), self.footer.set_dark(dark_mode(theme)))
+            )
         labels = {}
         for key, title in labels.items():
             self.pages[key] = PlaceholderPage(title)
         for page in self.pages.values():
             self.stack.addWidget(page)
         self.setCentralWidget(shell)
-        self.setStatusBar(Footer())
         self.sidebar.page_requested.connect(self.navigate)
         home = self.pages["home"]
         if isinstance(home, HomePage):
