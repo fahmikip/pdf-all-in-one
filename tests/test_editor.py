@@ -7,9 +7,8 @@ from pathlib import Path
 import pymupdf
 from core.pdf.watermark import insert_objects
 from PIL import Image
-from PySide6.QtCore import QEvent
 from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
-from PySide6.QtWidgets import QApplication, QFileDialog, QGraphicsSceneMouseEvent, QInputDialog
+from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog
 from ui.pages.edit import EditPage
 from ui.pages.editor import EditorPage, ImageItem, TextItem
 
@@ -178,9 +177,12 @@ def test_undo_redo_text_edit(sample_pdf: Path, monkeypatch) -> None:
     item = editor.page_objects[0][0]
 
     monkeypatch.setattr(QInputDialog, "getText", lambda *_args, **_kwargs: ("Baru", True))
-    event_double = QEvent.Type.GraphicsSceneMouseDoubleClick
 
-    item.mouseDoubleClickEvent(QGraphicsSceneMouseEvent(event_double))
+    class _Event:
+        def accept(self) -> None:
+            pass
+
+    item.mouseDoubleClickEvent(_Event())
     assert item.text == "Baru"
 
     editor._undo()
