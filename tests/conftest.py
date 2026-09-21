@@ -2,6 +2,22 @@ from pathlib import Path
 
 import pymupdf
 import pytest
+from PySide6.QtCore import QCoreApplication, QEvent
+from PySide6.QtWidgets import QApplication
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_qt_widgets():
+    """Release Qt widgets between tests to avoid native teardown crashes on Windows."""
+    yield
+    app = QApplication.instance()
+    if app is None:
+        return
+    for widget in app.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    app.processEvents()
 
 
 @pytest.fixture
