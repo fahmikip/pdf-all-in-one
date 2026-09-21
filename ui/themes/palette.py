@@ -111,12 +111,12 @@ def stylesheet_for(theme: str) -> str:
         tint_alpha = 0.16 if dark else 0.10
         border_alpha = 0.45 if dark else 0.26
         return (
-            f"QFrame#quickCard[accent=\"{acc}\"], QFrame#statCard[accent=\"{acc}\"] {{ "
+            f'QFrame#quickCard[accent="{acc}"], QFrame#statCard[accent="{acc}"] {{ '
             f"background: {rgba(light, tint_alpha)}; border: 1px solid {rgba(light, border_alpha)}; }}"
-            f"QFrame#quickCard[accent=\"{acc}\"] QPushButton#cardAction {{ "
+            f'QFrame#quickCard[accent="{acc}"] QPushButton#cardAction {{ '
             f"background: {rgba(deep, 0.92)}; color: white; border: none; border-radius: 8px; "
             f"padding: 9px 14px; text-align: center; font-weight: 600; }}"
-            f"QFrame#quickCard[accent=\"{acc}\"] QPushButton#cardAction:hover {{ "
+            f'QFrame#quickCard[accent="{acc}"] QPushButton#cardAction:hover {{ '
             f"background: {deep}; }}"
         )
 
@@ -347,9 +347,29 @@ def stylesheet_for(theme: str) -> str:
 def accent_styles() -> dict[str, str]:
     """Return objectName -> stylesheet fragment for accent-colored buttons."""
     return {
-        "success": "QPushButton#success { background: " + rgba("#059669", 0.95) + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#success:hover { background: " + rgba("#047857", 0.95) + "; }",
-        "warning": "QPushButton#warning { background: " + rgba("#D97706", 0.95) + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#warning:hover { background: " + rgba("#B45309", 0.95) + "; }",
-        "danger": "QPushButton#danger { background: " + rgba("#E11D48", 0.95) + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#danger:hover { background: " + rgba("#BE123C", 0.95) + "; }",
-        "info": "QPushButton#info { background: " + rgba("#0284C7", 0.95) + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#info:hover { background: " + rgba("#0369A1", 0.95) + "; }",
-        "ghost": "QPushButton#ghost { background: transparent; border: 1px solid " + rgba("#818CF8", 0.6) + "; color: #4F46E5; text-align: center; font-weight: 500; padding: 9px 14px; border-radius: 9px; } QPushButton#ghost:hover { background: " + rgba("#EEF2FF", 0.8) + "; }",
+        "success": "QPushButton#success { background: "
+        + rgba("#059669", 0.95)
+        + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#success:hover { background: "
+        + rgba("#047857", 0.95)
+        + "; }",
+        "warning": "QPushButton#warning { background: "
+        + rgba("#D97706", 0.95)
+        + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#warning:hover { background: "
+        + rgba("#B45309", 0.95)
+        + "; }",
+        "danger": "QPushButton#danger { background: "
+        + rgba("#E11D48", 0.95)
+        + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#danger:hover { background: "
+        + rgba("#BE123C", 0.95)
+        + "; }",
+        "info": "QPushButton#info { background: "
+        + rgba("#0284C7", 0.95)
+        + "; color: white; text-align: center; font-weight: 600; padding: 11px 18px; border-radius: 10px; } QPushButton#info:hover { background: "
+        + rgba("#0369A1", 0.95)
+        + "; }",
+        "ghost": "QPushButton#ghost { background: transparent; border: 1px solid "
+        + rgba("#818CF8", 0.6)
+        + "; color: #4F46E5; text-align: center; font-weight: 500; padding: 9px 14px; border-radius: 9px; } QPushButton#ghost:hover { background: "
+        + rgba("#EEF2FF", 0.8)
+        + "; }",
     }

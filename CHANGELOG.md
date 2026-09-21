@@ -4,6 +4,11 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-09-21
+
+### Diperbaiki
+- Tema terang dan gelap kini memakai backdrop yang benar, kontras tombol dan dialog yang lebih baik, serta footer yang konsisten. Tampilan pada rilis ini sama dengan antarmuka aplikasi saat ini.
+
 ## [1.7.0] - 2026-09-17
 
 ### Ditambahkan
