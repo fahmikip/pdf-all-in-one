@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date
 from io import BytesIO
 from pathlib import Path
@@ -170,55 +170,104 @@ def place_image(
     return output
 
 
-def insert_objects(source: str | Path, destination: str | Path, *, page_index: int = 0, items, progress=None) -> Path:
-    """Render interactive editor objects (images and styled text) onto a single page."""
+def insert_objects(
+    source: str | Path,
+    destination: str | Path,
+    *,
+    page_index: int | None = None,
+    items: list[Mapping] | None = None,
+    page_items: Mapping[int, Sequence[Mapping]] | None = None,
+    progress=None,
+) -> Path:
+    """Render interactive editor objects onto one or more pages of a PDF.
+
+    ``page_items`` maps zero-based page indices to object descriptors. When
+    ``page_items`` is omitted, ``items`` is applied to ``page_index`` (default 0)
+    for backwards compatibility.
+    """
     info = validate_pdf(source)
     output = Path(destination).resolve()
     ensure_distinct_paths(info.path, output)
-    if not 0 <= page_index < info.pages:
-        raise ValueError(f"Page {page_index + 1} does not exist.")
+    if page_items is None:
+        page_items = {page_index or 0: items or []}
+    for index in page_items:
+        if not 0 <= index < info.pages:
+            raise ValueError(f"Page {index + 1} does not exist.")
+    align_map = {
+        "left": pymupdf.TEXT_ALIGN_LEFT,
+        "center": pymupdf.TEXT_ALIGN_CENTER,
+        "right": pymupdf.TEXT_ALIGN_RIGHT,
+    }
+    total = sum(len(objects) for objects in page_items.values())
+    processed = 0
     with pymupdf.open(info.path) as document:
-        page = document[page_index]
-        for item in items:
-            if "rect" not in item:
-                continue
-            rect = pymupdf.Rect(*item["rect"])
-            if rect.width <= 0 or rect.height <= 0:
-                continue
-            kind = item.get("type")
-            if kind == "image":
-                image_source = Path(item["image"]).resolve()
-                if not image_source.is_file():
-                    raise ValueError(f"Image file does not exist: {image_source.name}")
-                with Image.open(image_source) as image:
-                    stream = BytesIO()
-                    image.convert("RGB").save(stream, "PNG")
-                    image_bytes = stream.getvalue()
-                page.insert_image(rect, stream=image_bytes, overlay=True)
-            elif kind == "text" and item.get("text"):
-                color = tuple(max(0, min(1, channel / 255)) for channel in item.get("color", (0, 0, 0)))
-                fontname = "helv"
-                fontfile = None
-                set_simple = 0
-                if resolved := resolve_font(item.get("font", "")):
-                    fontname = "f0"
-                    fontfile = str(resolved)
-                    set_simple = 1
-                text = item["text"]
-                kwargs = {
-                    "fontsize": max(1, item.get("size", 12)),
-                    "fontname": fontname,
-                    "fontfile": fontfile,
-                    "color": color,
-                    "set_simple": set_simple,
-                    "overlay": True,
-                }
-                if "\n" in text:
-                    page.insert_textbox(rect, text, align=pymupdf.TEXT_ALIGN_LEFT, **kwargs)
-                else:
-                    page.insert_text((rect.x0, rect.y0 + rect.height * 0.72), text, **kwargs)
-            if progress:
-                progress(10, "Applying objects…")
+        for index, objects in page_items.items():
+            page = document[index]
+            for item in objects:
+                if "rect" not in item:
+                    continue
+                rect = pymupdf.Rect(*item["rect"])
+                if rect.width <= 0 or rect.height <= 0:
+                    continue
+                rotation = int(item.get("rotation") or 0)
+                opacity = max(0.0, min(1.0, float(item.get("opacity", 1.0))))
+                kind = item.get("type")
+                if kind == "image":
+                    image_source = Path(item["image"]).resolve()
+                    if not image_source.is_file():
+                        raise ValueError(f"Image file does not exist: {image_source.name}")
+                    with Image.open(image_source) as image:
+                        image = image.convert("RGBA")
+                        if opacity < 1.0:
+                            alpha = image.getchannel("A").point(lambda value, factor=opacity: int(value * factor))
+                            image.putalpha(alpha)
+                        if rotation:
+                            image = image.rotate(-rotation, expand=True)
+                        stream = BytesIO()
+                        image.save(stream, "PNG")
+                        image_bytes = stream.getvalue()
+                    page.insert_image(rect, stream=image_bytes, overlay=True, keep_proportion=True)
+                elif kind == "text" and item.get("text"):
+                    color = tuple(max(0, min(1, channel / 255)) for channel in item.get("color", (0, 0, 0)))
+                    fontname = "helv"
+                    fontfile = None
+                    set_simple = 0
+                    if resolved := resolve_font(item.get("font", "")):
+                        fontname = "f0"
+                        fontfile = str(resolved)
+                        set_simple = 1
+                    text = item["text"]
+                    align = align_map.get(item.get("align", "left"), pymupdf.TEXT_ALIGN_LEFT)
+                    kwargs = {
+                        "fontsize": max(1, item.get("size", 12)),
+                        "fontname": fontname,
+                        "fontfile": fontfile,
+                        "color": color,
+                        "set_simple": set_simple,
+                        "fill_opacity": opacity,
+                        "overlay": True,
+                    }
+                    if rotation:
+                        page.insert_text(
+                            (rect.x0, rect.y0 + rect.height * 0.62),
+                            text.split("\n"),
+                            rotate=rotation,
+                            **kwargs,
+                        )
+                    elif "\n" in text:
+                        unused = page.insert_textbox(rect, text, align=align, **kwargs)
+                        if unused < 0:
+                            page.insert_text(
+                                (rect.x0, rect.y0 + rect.height * 0.72),
+                                text.split("\n"),
+                                lineheight=1.2,
+                                **kwargs,
+                            )
+                    else:
+                        page.insert_text((rect.x0, rect.y0 + rect.height * 0.72), text, **kwargs)
+                processed += 1
+                if progress:
+                    progress(round(processed / max(total, 1) * 95), f"Menempatkan objek {processed}/{total}…")
         with atomic_output(output) as temporary:
             document.save(temporary, garbage=3, deflate=True)
     if progress:

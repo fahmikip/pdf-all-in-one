@@ -4,6 +4,23 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-09-21
+
+### Ditambahkan
+- **Sisip & Edit siap untuk dokumen multi-halaman**: objek gambar dan teks kini tersimpan per halaman, tetap tampil saat berpindah-pindah halaman, dan seluruh objek dari semua halaman diterapkan saat **Simpan PDF**.
+- **Undo/Redo** (`Ctrl+Z` / `Ctrl+Y`) mencakup tambah gambar, tambah teks, pindah objek, ubah ukuran, ubah properti (opasitas/rotasi/font/perataan), edit isi teks, hapus objek, dan urutan layer.
+- **Panel objek**: daftar objek pada halaman aktif dengan pemilihan, penghapusan, serta pengaturan urutan layer depan/belakang.
+- **Properti objek**: gambar punya ukuran, opasitas, rotasi, dan layer; teks punya isi, font, ukuran, warna, opasitas, rotasi, dan perataan. Edit teks dengan klik dua kali tetap tersedia.
+- Mesin `insert_objects` kini menerima `page_items` (beberapa halaman sekaligus) serta mendukung rotasi, opasitas, dan perataan teks.
+
+### Diubah
+- Tombol **Tambah Gambar**, **Tambah Teks**, dan **Simpan PDF** nonaktif sampai PDF dipilih.
+- Petunjuk singkat **"Pilih PDF → Tambah objek → Atur posisi → Simpan PDF"** ditambahkan di halaman editor.
+- Pesan error ditampilkan ramah tanpa traceback teknis.
+
+### Diperbaiki
+- Teks multi-baris dan teks berotasi tidak lagi hilang/dipotong saat diekspor.
+
 ## [1.7.1] - 2026-09-21
 
 ### Diperbaiki

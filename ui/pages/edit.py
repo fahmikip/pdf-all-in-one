@@ -61,13 +61,19 @@ class EditPage(QWidget):
         name, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
         if not name:
             return
+        self.load_pdf(name)
+
+    def load_pdf(self, path: str | Path) -> bool:
+        """Load a PDF for every editing tab, including Insert & Edit."""
         try:
-            self.source = validate_pdf(name).path
+            self.source = validate_pdf(path).path
         except Exception as exc:
             QMessageBox.warning(self, "Tidak Dapat Membuka PDF", str(exc))
-            return
+            return False
         self.source_label.setText(self.source.name)
         self._load_metadata()
+        self.editor.load_pdf(self.source)
+        return True
 
     def _watermark_tab(self) -> None:
         page = QWidget()
@@ -177,7 +183,8 @@ class EditPage(QWidget):
             self.wm_content.setText(name)
 
     def _editor_tab(self) -> None:
-        self.tabs.addTab(EditorPage(), "Sisip & Edit")
+        self.editor = EditorPage()
+        self.tabs.addTab(self.editor, "Sisip & Edit")
 
     def _output(self, suffix: str) -> str:
         if not self.source:
