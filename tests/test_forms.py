@@ -87,3 +87,30 @@ def test_sign_pdf_requires_content(tmp_path: Path) -> None:
         sign_pdf(pdf, tmp_path / "out.pdf", name="Budi", page_number=1, rect=(0, 0, 0, 0))
     with pytest.raises(ValueError):
         sign_pdf(pdf, tmp_path / "out.pdf", name="Budi", page_number=99, rect=(40, 200, 140, 245))
+
+
+def test_sign_pdf_supports_multiple_signers(tmp_path: Path) -> None:
+    pdf = _form_pdf(tmp_path / "base.pdf")
+    first = _signature_image(tmp_path / "first.png")
+    second = _signature_image(tmp_path / "second.png")
+    output = sign_pdf(
+        pdf,
+        tmp_path / "multi-signed.pdf",
+        image_path=first,
+        page_number=1,
+        rect=(20, 200, 110, 245),
+        name="First signer",
+        additional_signatures=[
+            {
+                "image_path": second,
+                "page_number": 1,
+                "rect": (160, 200, 250, 245),
+                "name": "Second signer",
+            }
+        ],
+    )
+    with pymupdf.open(output) as document:
+        text = document[0].get_text()
+        images = document[0].get_images(full=True)
+    assert "First signer" in text and "Second signer" in text
+    assert len(images) == 2

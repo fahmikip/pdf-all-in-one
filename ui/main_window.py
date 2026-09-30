@@ -26,6 +26,7 @@ from ui.pages.organizer import OrganizerPage
 from ui.pages.pages import PageToolsPage
 from ui.pages.pdf_tools import CompressPage, MergePage, SplitPage
 from ui.pages.placeholder import PlaceholderPage
+from ui.pages.redact import RedactPage
 from ui.pages.repair import RepairPage
 from ui.pages.security import SecurityPage
 from ui.pages.settings import SettingsPage
@@ -85,6 +86,7 @@ class MainWindow(QMainWindow):
             "edit": EditPage(),
             "forms": FormsPage(),
             "security": SecurityPage(),
+            "redact": RedactPage(),
             "history": HistoryPage(),
             "settings": SettingsPage(settings, config_store, self.check_updates_manual),
             "ocr": OcrPage(),

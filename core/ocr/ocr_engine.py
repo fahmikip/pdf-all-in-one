@@ -9,6 +9,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pymupdf
+from PIL import Image, ImageEnhance, ImageOps
 
 from core.pdf.merger import merge_pdfs
 from core.utils.file_utils import atomic_output, ensure_distinct_paths
@@ -56,6 +57,12 @@ def _command(executable: Path, source: Path, output_base: str, language: str, ou
     return [str(executable), str(source), output_base, "-l", language, output_format]
 
 
+def _clean_scan(image: Image.Image) -> Image.Image:
+    """Improve faded scans for OCR while retaining grayscale detail."""
+    grayscale = ImageOps.grayscale(image)
+    return ImageEnhance.Contrast(ImageOps.autocontrast(grayscale, cutoff=1)).enhance(1.15)
+
+
 def ocr_image(
     source: str | Path,
     destination: str | Path,
@@ -63,6 +70,7 @@ def ocr_image(
     language: str = "eng",
     output_format: str = "txt",
     executable: str | Path | None = None,
+    clean_scan: bool = False,
     progress: Progress | None = None,
 ) -> Path:
     tesseract = find_tesseract(executable)
@@ -80,6 +88,11 @@ def ocr_image(
     if language not in available_languages(tesseract):
         raise ValueError(f"Tesseract language '{language}' is not installed.")
     with tempfile.TemporaryDirectory(prefix="pdfmaster-ocr-") as directory:
+        if clean_scan:
+            cleaned = Path(directory) / f"source{image.suffix.lower()}"
+            with Image.open(image) as original:
+                _clean_scan(original).save(cleaned)
+            image = cleaned
         base = Path(directory) / "result"
         result = subprocess.run(
             _command(tesseract, image, str(base), language, output_format),
@@ -107,6 +120,7 @@ def ocr_pdf(
     output_format: str = "pdf",
     dpi: int = 200,
     executable: str | Path | None = None,
+    clean_scan: bool = False,
     progress: Progress | None = None,
 ) -> Path:
     tesseract = find_tesseract(executable)
@@ -128,9 +142,13 @@ def ocr_pdf(
         with pymupdf.open(info.path) as document:
             for index, page in enumerate(document):
                 image = work / f"page-{index + 1}.png"
-                page.get_pixmap(matrix=pymupdf.Matrix(dpi / 72, dpi / 72), colorspace=pymupdf.csRGB, alpha=False).save(
-                    image
+                pixmap = page.get_pixmap(
+                    matrix=pymupdf.Matrix(dpi / 72, dpi / 72), colorspace=pymupdf.csRGB, alpha=False
                 )
+                rendered = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
+                if clean_scan:
+                    rendered = _clean_scan(rendered)
+                rendered.save(image)
                 base = work / f"ocr-{index + 1}"
                 result = subprocess.run(
                     _command(tesseract, image, str(base), language, output_format),

@@ -113,6 +113,14 @@ class ConverterPage(QWidget):
         file_row.addStretch()
         layout.addLayout(file_row)
         settings = QHBoxLayout()
+        self.export_preset = QComboBox()
+        self.export_preset.addItem("Email · file ringan", "email")
+        self.export_preset.addItem("Layar · seimbang", "screen")
+        self.export_preset.addItem("Cetak · tajam", "print")
+        self.export_preset.addItem("Arsip · kualitas tinggi", "archive")
+        self.export_preset.currentIndexChanged.connect(self._apply_export_preset)
+        settings.addWidget(QLabel("Preset ekspor"))
+        settings.addWidget(self.export_preset)
         self.page_size = QComboBox()
         self.page_size.addItems(["A4", "Letter", "Legal", "Fit"])
         settings.addWidget(QLabel("Ukuran halaman"))
@@ -158,6 +166,12 @@ class ConverterPage(QWidget):
         layout.addWidget(process)
         layout.addStretch()
         self.mode_changed(self.mode.currentText())
+
+    def _apply_export_preset(self, _index: int) -> None:
+        values = {"email": (96, 72), "screen": (150, 85), "print": (300, 95), "archive": (600, 100)}
+        dpi, quality = values[self.export_preset.currentData()]
+        self.dpi.setCurrentText(str(dpi))
+        self.quality.setValue(quality)
 
     def mode_changed(self, mode: str) -> None:
         to_pdf = mode == "Gambar ke PDF"

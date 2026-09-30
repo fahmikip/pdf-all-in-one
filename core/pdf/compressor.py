@@ -265,3 +265,22 @@ def compress_pdf(
     if progress:
         progress(100, output.name)
     return CompressionResult(output, info.size, output.stat().st_size)
+
+
+def preview_compression(
+    source: str | Path,
+    level: str = "recommended",
+    *,
+    aggressive: bool = False,
+    engine: str = "builtin",
+    progress=None,
+) -> CompressionResult:
+    """Run compression into a temporary file and return measurable preview data.
+
+    No destination is published; the temporary result is removed before returning.
+    """
+    info = validate_pdf(source)
+    with tempfile.TemporaryDirectory(prefix="pdfmaster-preview-") as folder:
+        target = Path(folder) / "preview.pdf"
+        result = compress_pdf(info.path, target, level, aggressive=aggressive, engine=engine, progress=progress)
+        return CompressionResult(Path(), info.size, result.compressed_size)

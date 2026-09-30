@@ -36,7 +36,8 @@ Versi saat ini: **v1.7.2**
 | Alat PDF | Print Layout | Susun 2–16 halaman per lembar (N-up) atau buat **booklet lipat-tengah** siap cetak bolak-balik |
 | Konversi | Konversi File | Gambar→PDF, PDF→JPG/PNG/WebP, Word/Excel/PowerPoint→PDF (LibreOffice), PDF→Word, PDF→Excel |
 | Edit | Watermark & Lainnya | Watermark teks/gambar, nomor halaman, header & footer, edit metadata, **Insert & Edit** (letakkan foto, geser, ubah ukuran, tambah teks dengan pilihan font, ukuran & warna) |
-| Edit | PDF Forms & Signature | Isi formulir PDF interaktif (teks/centang), tambah tanda tangan visual (gambar + nama) atau **gambar tanda tangan langsung dengan mouse/touchscreen** |
+| Edit | PDF Forms & Signature | Isi formulir PDF interaktif (teks/centang), tambah satu atau beberapa tanda tangan visual (gambar + nama), simpan tanda tangan di perangkat, atau **gambar tanda tangan langsung dengan mouse/touchscreen** |
+| Edit | Redaksi & Anotasi | Cari dan redaksi permanen teks PDF, ganti teks, sorot frasa, dan tambahkan catatan pada salinan baru |
 | Keamanan | Lindungi / Buka Kunci | Proteksi kata sandi PDF dan buka kunci resmi |
 | OCR | OCR PDF / Gambar | Buat hasil scan dapat dicari (memerlukan Tesseract) |
 | Lanjutan | Proses Batch | Jalankan operasi yang sama untuk banyak file sekaligus |
@@ -108,13 +109,19 @@ Jalankan rangkaian tes dengan `python -m pytest`.
 12. **Tanda tangan tulisan tangan**
     Pilih **PDF Forms & Signature** → tab *Sign Document* → centang **Draw signature with mouse / touch** → gambarlah tanda tangan di papan → pilih halaman & posisi → **Sign PDF**.
 
-13. **Print layout & booklet**
+13. **Redaksi teks sensitif**
+    Pilih **Redaksi & Anotasi** → pilih PDF → cari teks yang ingin dihapus → periksa halaman yang cocok → **Hapus permanen**. Redaksi hanya menemukan teks yang tersimpan sebagai teks PDF; jalankan OCR terlebih dahulu untuk scan. Hasil selalu disimpan sebagai file baru.
+
+14. **Anotasi dan penggantian teks**
+    Di **Redaksi & Anotasi**, gunakan tab *Sorot & catatan* untuk menyorot frasa dan menambahkan catatan. Tab *Redaksi permanen* juga dapat mengganti teks yang cocok ke file baru.
+
+15. **Print layout & booklet**
     Pilih **Print Layout** → pilih PDF → atur *Pages per sheet* (2–16) atau centang *Booklet (fold)* → **Create Layout**. Cetak hasilnya bolak-balik dan lipat agar menjadi buklet.
 
-14. **Hapus halaman kosong / ubah ukuran / PDF baru**
+16. **Hapus halaman kosong / ubah ukuran / PDF baru**
     Pilih **Page Tools**. Tab *Remove Blank Pages* untuk membuang halaman blank, tab *Resize Pages* untuk menyetel ulang ke ukuran standar, atau tab *New PDF* untuk membuat dokumen kosong.
 
-15. **Perbaiki & Fast Web View**
+17. **Perbaiki & Fast Web View**
     Pilih **Repair & Optimize** → tab *Repair PDF* untuk memulihkan file rusak, atau tab *Fast Web View* untuk membuat salinan yang termuat cepat di browser.
 
 ## FAQ

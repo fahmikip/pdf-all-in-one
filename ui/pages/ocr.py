@@ -7,6 +7,7 @@ from core.ocr.ocr_engine import available_languages, find_tesseract, ocr_image, 
 from PySide6.QtCore import QThreadPool, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QFormLayout,
@@ -58,6 +59,8 @@ class OcrPage(QWidget):
         self.dpi.addItems(["150", "200", "300"])
         self.dpi.setCurrentText("200")
         form.addRow("DPI", self.dpi)
+        self.clean_scan = QCheckBox("Tingkatkan kontras scan pudar sebelum OCR")
+        form.addRow("Penyempurnaan scan", self.clean_scan)
         layout.addLayout(form)
         self.progress = QProgressBar()
         self.progress.hide()
@@ -128,7 +131,12 @@ class OcrPage(QWidget):
             return
         language = self.language.currentData()
         function = ocr_pdf if self.source.suffix.lower() == ".pdf" else ocr_image
-        kwargs = {"language": language, "output_format": "pdf" if pdf_output else "txt", "executable": self.executable}
+        kwargs = {
+            "language": language,
+            "output_format": "pdf" if pdf_output else "txt",
+            "executable": self.executable,
+            "clean_scan": self.clean_scan.isChecked(),
+        }
         if function is ocr_pdf:
             kwargs["dpi"] = int(self.dpi.currentText())
         self.progress.setValue(0)

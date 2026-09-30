@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pymupdf
 import pytest
-from core.pdf.compressor import compress_pdf
+from core.pdf.compressor import compress_pdf, preview_compression
 from core.pdf.merger import merge_pdfs
 from core.pdf.metadata import read_metadata, write_metadata
 from core.pdf.page_manager import PageSpec, organize_pages, remove_pages, reorder_pages, rotate_pages
@@ -47,6 +47,15 @@ def test_compress_and_metadata(sample_pdf: Path, tmp_path: Path) -> None:
     assert compressed.compressed_size > 0
     updated = write_metadata(compressed.output, tmp_path / "metadata.pdf", {"title": "Updated"})
     assert read_metadata(updated)["title"] == "Updated"
+
+
+def test_preview_compression_measures_without_publishing(sample_pdf: Path, tmp_path: Path) -> None:
+    original = sample_pdf.read_bytes()
+    preview = preview_compression(sample_pdf, "recommended")
+    assert preview.original_size == len(original)
+    assert preview.compressed_size > 0
+    assert sample_pdf.read_bytes() == original
+    assert list(tmp_path.iterdir()) == [sample_pdf]
 
 
 def test_qpdf_lossless_engine_preserves_content(sample_pdf: Path, tmp_path: Path) -> None:

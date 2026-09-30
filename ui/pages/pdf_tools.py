@@ -6,8 +6,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import pymupdf
 from core.jobs.worker import FunctionWorker
-from core.pdf.compressor import CompressionResult, compress_pdf, find_ghostscript
+from core.pdf.compressor import CompressionResult, compress_pdf, find_ghostscript, preview_compression
 from core.pdf.merger import merge_pdfs
 from core.pdf.splitter import extract_range, split_every_n
 from core.utils.history import HistoryStore
@@ -134,6 +135,7 @@ class CompressPage(ToolPage):
             "Ghostscript: paling kuat untuk PDF hasil scan (memerlukan Ghostscript terpasang)."
         )
         row.addWidget(self.engine, 1)
+        self.engine.currentIndexChanged.connect(self.engine_changed)
         row.addWidget(QLabel("Tingkat kompresi"))
         self.level = QComboBox()
         for label, value in (
@@ -149,7 +151,8 @@ class CompressPage(ToolPage):
         self.level.currentTextChanged.connect(self.level_changed)
         self.process = QPushButton("Kompres PDF")
         self.process.setObjectName("success")
-        self.process.clicked.connect(self.start)
+        self.process.setText("Pratinjau Kompresi")
+        self.process.clicked.connect(self.preview)
         row.addWidget(self.process)
         self.layout.insertLayout(3, row)
         self.aggressive = QCheckBox("Kompresi agresif (file lebih kecil, halaman diubah menjadi gambar)")
@@ -159,11 +162,18 @@ class CompressPage(ToolPage):
         warning = QLabel("Mode agresif menurunkan kualitas gambar dan menghapus teks yang dapat dipilih/dicari.")
         warning.setObjectName("muted")
         self.layout.insertWidget(5, warning)
+        self.preview_result: CompressionResult | None = None
         self.layout.addStretch()
 
     def level_changed(self, level: str) -> None:
         if level == "Maksimum":
             self.aggressive.setChecked(True)
+
+    def engine_changed(self, _index: int) -> None:
+        supports_raster = self.engine.currentData() == "builtin"
+        self.aggressive.setEnabled(supports_raster)
+        if not supports_raster:
+            self.aggressive.setChecked(False)
 
     def choose(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
@@ -206,6 +216,54 @@ class CompressPage(ToolPage):
                 with_progress=True,
             )
 
+    def preview(self) -> None:
+        if not self.source:
+            QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
+            return
+        self.process.setEnabled(False)
+        self.status.setText("Membuat pratinjau kompresi…")
+        worker = FunctionWorker(
+            preview_compression,
+            self.source,
+            self.level.currentData(),
+            aggressive=self.aggressive.isChecked(),
+            engine=self.engine.currentData(),
+            with_progress=True,
+        )
+        worker.signals.result.connect(self._preview_ready)
+        worker.signals.error.connect(self._preview_failed)
+        worker.signals.finished.connect(lambda: self.process.setEnabled(True))
+        self.pool.start(worker)
+
+    def _preview_ready(self, result: object) -> None:
+        if not isinstance(result, CompressionResult) or not self.source:
+            return
+        self.preview_result = result
+        reduction = result.reduction_percent
+        size_change = (
+            f"perkiraan {_format_size(result.original_size)} → {_format_size(result.compressed_size)} "
+            f"({reduction:.1f}% lebih kecil)"
+            if result.compressed_size < result.original_size
+            else f"hasilnya tidak lebih kecil ({_format_size(result.original_size)} → {_format_size(result.compressed_size)})"
+        )
+        message = f"Pratinjau selesai: {size_change}. Buat file hasil kompresi?"
+        if self.aggressive.isChecked():
+            message += "\n\nMode agresif merasterisasi halaman; teks tidak dapat dipilih/dicari dan tautan/formulir dapat hilang."
+        answer = QMessageBox.question(
+            self,
+            "Pratinjau Kompresi",
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            self.start()
+        else:
+            self.status.setText(f"Pratinjau: {size_change}. File belum dibuat.")
+
+    def _preview_failed(self, message: str, details: str) -> None:
+        self._error(message, details)
+
     def _success(self, result: object) -> None:
         super()._success(result)
         if isinstance(result, CompressionResult) and self.source:
@@ -229,14 +287,38 @@ class MergePage(ToolPage):
         remove = QPushButton("Hapus yang Dipilih")
         remove.setObjectName("ghost")
         remove.clicked.connect(lambda: self.files.takeItem(self.files.currentRow()))
+        preview = QPushButton("Tinjau Urutan")
+        preview.setObjectName("ghost")
+        preview.clicked.connect(self.preview_order)
         merge = QPushButton("Gabung PDF")
         merge.setObjectName("success")
         merge.clicked.connect(self.start)
         controls.addWidget(remove)
+        controls.addWidget(preview)
         controls.addStretch()
         controls.addWidget(merge)
         self.layout.insertLayout(4, controls)
         self.layout.addStretch()
+
+    def preview_order(self) -> None:
+        sources = [Path(self.files.item(i).data(Qt.ItemDataRole.UserRole)) for i in range(self.files.count())]
+        if not sources:
+            QMessageBox.information(self, "Tambah PDF", "Tambahkan PDF untuk melihat urutannya.")
+            return
+        lines = []
+        total_bytes = 0
+        total_pages = 0
+        for index, source in enumerate(sources, start=1):
+            info = validate_pdf(source)
+            total_bytes += info.size
+            total_pages += info.pages
+            lines.append(f"{index}. {source.name} — {info.pages} halaman · {_format_size(info.size)}")
+        QMessageBox.information(
+            self,
+            "Pratinjau Penggabungan",
+            f"Urutan keluaran ({total_pages} halaman · {_format_size(total_bytes)} sebelum kompresi):\n\n"
+            + "\n".join(lines),
+        )
 
     def choose(self) -> None:
         files, _ = QFileDialog.getOpenFileNames(self, "Pilih PDF", "", "Berkas PDF (*.pdf)")
@@ -277,6 +359,11 @@ class MergePage(ToolPage):
                 sum(path.stat().st_size for path in sources if path.exists()),
                 result.stat().st_size,
                 str(result),
+            )
+            with pymupdf.open(result) as document:
+                output_pages = document.page_count
+            self.status.setText(
+                f"Penggabungan selesai · {output_pages} halaman · {_format_size(result.stat().st_size)} hasil"
             )
 
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from core.jobs.queue import JobQueue, JobStatus
 from core.jobs.worker import FunctionWorker
-from core.pdf.compressor import CompressionResult, compress_pdf
+from core.pdf.compressor import CompressionResult, compress_pdf, find_ghostscript
 from core.utils.history import HistoryStore
 from core.utils.validation import validate_pdf
 from PySide6.QtCore import Qt, QThreadPool, QTimer
@@ -32,6 +32,7 @@ class BatchPage(QWidget):
         self.paused = False
         self.worker = None
         self.output_dir: Path | None = None
+        self.engine_name = "Bawaan"
         layout = QVBoxLayout(self)
         layout.setContentsMargins(34, 27, 34, 27)
         title = QLabel("Proses Batch")
@@ -41,9 +42,12 @@ class BatchPage(QWidget):
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         options = QHBoxLayout()
-        options.addWidget(QLabel("Tugas"))
+        options.addWidget(QLabel("Preset"))
         self.task = QComboBox()
-        self.task.addItems(["Kompres PDF"])
+        self.task.addItems(
+            ["Kompres · Seimbang", "Kompres · Kualitas tinggi", "Kompres · Ukuran minimum", "Kompres · Lossless"]
+        )
+        self.task.currentIndexChanged.connect(self._preset_changed)
         options.addWidget(self.task)
         options.addWidget(QLabel("Level"))
         self.level = QComboBox()
@@ -57,6 +61,13 @@ class BatchPage(QWidget):
         index = self.level.findData(default_level)
         self.level.setCurrentIndex(index if index >= 0 else 1)
         options.addWidget(self.level)
+        self.engine = QComboBox()
+        self.engine.addItem("Bawaan", "builtin")
+        self.engine.addItem("Lossless", "qpdf")
+        if find_ghostscript():
+            self.engine.addItem("Ghostscript", "ghostscript")
+        options.addWidget(QLabel("Mesin"))
+        options.addWidget(self.engine)
         add = QPushButton("Tambah PDF")
         add.setObjectName("ghost")
         add.clicked.connect(self.add_files)
@@ -65,6 +76,12 @@ class BatchPage(QWidget):
         folder.clicked.connect(self.choose_output)
         options.addWidget(add)
         options.addWidget(folder)
+        options.addWidget(QLabel("Nama output"))
+        self.output_pattern = QComboBox()
+        self.output_pattern.setEditable(True)
+        self.output_pattern.addItems(["{name}_compressed", "{name}_{level}", "compressed_{name}"])
+        self.output_pattern.setToolTip("Gunakan {name} untuk nama sumber dan {level} untuk preset kompresi.")
+        options.addWidget(self.output_pattern)
         options.addStretch()
         layout.addLayout(options)
         self.output_label = QLabel("Output: di samping setiap file sumber")
@@ -93,6 +110,24 @@ class BatchPage(QWidget):
             controls.addWidget(button)
         controls.addStretch()
         layout.addLayout(controls)
+        self.summary = QLabel("")
+        self.summary.setObjectName("muted")
+        layout.addWidget(self.summary)
+
+    def _preset_changed(self, index: int) -> None:
+        if index == 0:
+            self.level.setCurrentIndex(self.level.findData("recommended"))
+            self.engine.setCurrentIndex(self.engine.findData("builtin"))
+        elif index == 1:
+            self.level.setCurrentIndex(self.level.findData("low"))
+            self.engine.setCurrentIndex(self.engine.findData("builtin"))
+        elif index == 2:
+            self.level.setCurrentIndex(self.level.findData("maximum"))
+            gs = self.engine.findData("ghostscript")
+            self.engine.setCurrentIndex(gs if gs >= 0 else self.engine.findData("builtin"))
+        else:
+            self.level.setCurrentIndex(self.level.findData("recommended"))
+            self.engine.setCurrentIndex(self.engine.findData("qpdf"))
 
     def choose_output(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Folder output batch")
@@ -109,7 +144,10 @@ class BatchPage(QWidget):
                 QMessageBox.warning(self, "PDF dilewati", str(exc))
                 continue
             folder = self.output_dir or source.parent
-            output = folder / f"{source.stem}_compressed.pdf"
+            pattern = self.output_pattern.currentText().strip() or "{name}_compressed"
+            safe_name = pattern.replace("{name}", source.stem).replace("{level}", str(self.level.currentData()))
+            safe_name = Path(safe_name).name.replace("/", "_").replace("\\", "_")
+            output = folder / f"{safe_name}.pdf"
             self.queue.add(source, "Kompres PDF", output)
         self.refresh()
 
@@ -137,7 +175,14 @@ class BatchPage(QWidget):
             return
         self.queue.update(job.id, status=JobStatus.PROCESSING, progress=5)
         self.refresh()
-        worker = FunctionWorker(compress_pdf, job.source, job.output, self.level.currentData(), with_progress=True)
+        worker = FunctionWorker(
+            compress_pdf,
+            job.source,
+            job.output,
+            self.level.currentData(),
+            engine=self.engine.currentData(),
+            with_progress=True,
+        )
         self.worker = worker
         worker.signals.progress.connect(lambda value, detail, job_id=job.id: self.update_progress(job_id, value))
         worker.signals.result.connect(lambda result, job_id=job.id: self.completed(job_id, result))
@@ -155,6 +200,10 @@ class BatchPage(QWidget):
             return
         self.queue.update(job_id, status=JobStatus.COMPLETED, progress=100)
         if isinstance(result, CompressionResult):
+            self.summary.setText(
+                f"Selesai {sum(j.status == JobStatus.COMPLETED for j in self.queue.snapshot())} dari "
+                f"{len(self.queue.snapshot())} · Hemat {_format_saved(result.saved_bytes)} pada file terakhir"
+            )
             HistoryStore().add(
                 job.source.name, "Kompres PDF Batch", result.original_size, result.compressed_size, str(result.output)
             )
@@ -175,6 +224,11 @@ class BatchPage(QWidget):
     def finished(self) -> None:
         self.worker = None
         self.refresh()
+        jobs = self.queue.snapshot()
+        completed = sum(job.status == JobStatus.COMPLETED for job in jobs)
+        failed = sum(job.status == JobStatus.FAILED for job in jobs)
+        waiting = sum(job.status == JobStatus.WAITING for job in jobs)
+        self.summary.setText(f"Antrean: {completed} berhasil · {failed} gagal · {waiting} menunggu")
         QTimer.singleShot(0, self._run_next)
 
     def toggle_pause(self) -> None:
@@ -192,3 +246,7 @@ class BatchPage(QWidget):
     def clear_finished(self) -> None:
         self.queue.clear_finished()
         self.refresh()
+
+
+def _format_saved(size: int) -> str:
+    return f"{size / 1048576:.2f} MB" if size >= 1048576 else f"{size / 1024:.1f} KB"

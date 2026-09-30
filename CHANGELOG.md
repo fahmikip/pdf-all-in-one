@@ -4,6 +4,22 @@ Semua perubahan penting pada **PDF Master** akan dicatat di berkas ini.
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), dan versi mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-09-30
+
+### Ditambahkan
+- Pratinjau kompresi terukur sebelum menyimpan hasil, termasuk peringatan kehilangan teks saat rasterisasi agresif.
+- Pratinjau urutan berkas dan ringkasan halaman/ukuran untuk penggabungan PDF.
+- Halaman **Redaksi & Anotasi** untuk menghapus teks secara permanen, mengganti teks, menyorot frasa, dan menambahkan catatan.
+- Preset proses batch, pilihan mesin kompresi, pola nama output, dan ringkasan antrean berhasil/gagal.
+- Preset ekspor PDF ke gambar untuk email, layar, cetak, dan arsip.
+- Peningkatan kontras scan opsional sebelum OCR.
+- Penyimpanan tanda tangan lokal dan dukungan beberapa penanda tangan pada satu dokumen.
+- Tes regresi untuk pratinjau, redaksi, penggantian teks, anotasi, dan beberapa tanda tangan.
+
+### Catatan
+- Redaksi mencari teks yang tersimpan sebagai teks PDF. Dokumen scan perlu OCR lebih dulu.
+- Tanda tangan yang ditambahkan adalah tanda tangan visual, bukan tanda tangan digital kriptografis.
+
 ## [1.7.2] - 2026-09-21
 
 ### Ditambahkan

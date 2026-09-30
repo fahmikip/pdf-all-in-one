@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pymupdf
+from app.config import local_data_dir
 from core.jobs.worker import FunctionWorker
 from core.pdf.forms import fill_pdf_form, list_form_fields, sign_pdf
 from core.utils.history import HistoryStore
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -39,6 +41,7 @@ class FormsPage(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.source: Path | None = None
+        self.additional_signers: list[dict[str, str]] = []
         self.worker: FunctionWorker | None = None
         self.pool = QThreadPool.globalInstance()
         layout = QVBoxLayout(self)
@@ -104,6 +107,14 @@ class FormsPage(QWidget):
         choose.clicked.connect(self.choose_image)
         image_row.addWidget(self.image_label, 1)
         image_row.addWidget(choose)
+        save_signature = QPushButton("Simpan tanda tangan lokal")
+        save_signature.setObjectName("ghost")
+        save_signature.clicked.connect(self.save_signature_locally)
+        image_row.addWidget(save_signature)
+        saved_signature = local_data_dir() / "signature.png"
+        if saved_signature.is_file():
+            self.image = saved_signature
+            self.image_label.setText("Tanda tangan tersimpan di perangkat")
         box.addLayout(image_row)
         self.draw_toggle = QCheckBox("Gambar tanda tangan dengan mouse / sentuhan")
         self.draw_toggle.setToolTip("Buat sketsa tanda tangan Anda pada papan di bawah, bukan memakai gambar.")
@@ -146,6 +157,15 @@ class FormsPage(QWidget):
         fields.addWidget(self.name, 1)
         fields.addWidget(self.role, 1)
         box.addLayout(fields)
+        extra_row = QHBoxLayout()
+        add_signer = QPushButton("Tambah penanda tangan")
+        add_signer.setObjectName("ghost")
+        add_signer.clicked.connect(self.add_signer)
+        self.signer_count = QLabel("Belum ada penanda tangan tambahan")
+        self.signer_count.setObjectName("muted")
+        extra_row.addWidget(add_signer)
+        extra_row.addWidget(self.signer_count, 1)
+        box.addLayout(extra_row)
         actions = QHBoxLayout()
         self.sign_progress = QProgressBar()
         self.sign_progress.hide()
@@ -221,6 +241,34 @@ class FormsPage(QWidget):
             return self.pad.png_path()
         return getattr(self, "image", None)
 
+    def add_signer(self) -> None:
+        name, accepted = QInputDialog.getText(self, "Penanda tangan tambahan", "Nama penanda tangan:")
+        if not accepted or not name.strip():
+            return
+        image, _ = QFileDialog.getOpenFileName(
+            self, "Pilih tanda tangan (opsional)", "", "Gambar (*.png *.jpg *.jpeg *.webp)"
+        )
+        self.additional_signers.append({"name": name.strip(), "image_path": image})
+        self.signer_count.setText(f"{len(self.additional_signers)} penanda tangan tambahan siap")
+
+    def save_signature_locally(self) -> None:
+        source = self._signature_source()
+        if source is None:
+            return
+        target = local_data_dir() / "signature.png"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if self.draw_toggle.isChecked():
+            target.write_bytes(source.read_bytes())
+        else:
+            from PIL import Image
+
+            with Image.open(source) as image:
+                image.save(target, format="PNG")
+        self.image = target
+        self.draw_toggle.setChecked(False)
+        self.image_label.setText("Tanda tangan tersimpan secara lokal")
+        self.status.setText("Tanda tangan disimpan di komputer ini dan tidak diunggah.")
+
     def _updates(self) -> dict[str, object]:
         updates: dict[str, object] = {}
         for row in range(self.fields.rowCount()):
@@ -261,7 +309,7 @@ class FormsPage(QWidget):
             QMessageBox.information(self, "Pilih PDF", "Pilih PDF terlebih dahulu.")
             return
         image = self._signature_source()
-        if image is None and not self.name.text() and not self.role.text():
+        if image is None and not self.name.text() and not self.role.text() and not self.additional_signers:
             QMessageBox.information(
                 self, "Tanda tangan diperlukan", "Pilih atau gambar tanda tangan, atau isi nama penanda tangan."
             )
@@ -287,6 +335,16 @@ class FormsPage(QWidget):
             "Top-right": (right_x - SIGN_WIDTH, margin, right_x, margin + SIGN_HEIGHT),
         }
         rect = positions[self.position.currentData()]
+        alternatives = [value for key, value in positions.items() if key != self.position.currentData()]
+        additional = []
+        for index, signer in enumerate(self.additional_signers):
+            additional.append(
+                {
+                    **signer,
+                    "page_number": self.page.value(),
+                    "rect": alternatives[index % len(alternatives)],
+                }
+            )
         self._run_job(
             "sign",
             sign_pdf,
@@ -295,6 +353,7 @@ class FormsPage(QWidget):
             rect=rect,
             name=self.name.text().strip(),
             role=self.role.text().strip(),
+            additional_signatures=additional,
         )
 
     def _run_job(self, action: str, function, *args, **kwargs) -> None:

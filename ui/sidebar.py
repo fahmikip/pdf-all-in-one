@@ -67,7 +67,11 @@ class Sidebar(QFrame):
             ],
             "ALAT HALAMAN": [("pages", "Alat Halaman")],
             "KONVERSI": [("convert", "Konversi File")],
-            "EDIT": [("edit", "Watermark & Lainnya"), ("forms", "Form PDF & Tanda Tangan")],
+            "EDIT": [
+                ("edit", "Watermark & Lainnya"),
+                ("redact", "Redaksi & Anotasi"),
+                ("forms", "Form PDF & Tanda Tangan"),
+            ],
             "KEAMANAN": [("security", "Amankan / Buka Kunci")],
             "OCR": [("ocr", "OCR PDF / Gambar")],
             "LANJUTAN": [("batch", "Proses Batch"), ("repair", "Perbaiki & Optimalkan")],

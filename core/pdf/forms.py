@@ -108,6 +108,7 @@ def sign_pdf(
     rect: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0),
     name: str = "",
     role: str = "",
+    additional_signatures: list[dict] | None = None,
     progress: Progress | None = None,
 ) -> Path:
     """Overlay a signature image and optional caption onto one page."""
@@ -118,7 +119,7 @@ def sign_pdf(
     ensure_distinct_paths(info.path, output)
     if output.suffix.lower() != ".pdf":
         raise ValueError("Sign output must use .pdf.")
-    if not image_path and not name:
+    if not image_path and not name and not additional_signatures:
         raise ValueError("Provide a signature image, a signer name, or both.")
     image = Path(image_path).resolve() if image_path else None
     if image is not None and not image.is_file():
@@ -130,16 +131,28 @@ def sign_pdf(
     with pymupdf.open(info.path) as doc:
         if page_number > doc.page_count:
             raise ValueError(f"The PDF only has {doc.page_count} page(s).")
-        page = doc[page_number - 1]
-        left, top, right, bottom = rect
-        box = pymupdf.Rect(left, top, right, bottom)
-        if image is not None:
-            page.insert_image(box, filename=str(image))
-        if name:
-            caption_y = bottom + 6
-            page.insert_text((left, caption_y), name, fontsize=10, fontname="helv")
-            if role:
-                page.insert_text((left, caption_y + 13), role, fontsize=8, fontname="helv")
+        signers = [{"image_path": image, "page_number": page_number, "rect": rect, "name": name, "role": role}]
+        signers.extend(additional_signatures or [])
+        for signer in signers:
+            signer_page = int(signer.get("page_number", page_number))
+            if signer_page < 1 or signer_page > doc.page_count:
+                raise ValueError(f"Penanda tangan memilih halaman di luar dokumen: {signer_page}.")
+            page = doc[signer_page - 1]
+            left, top, right, bottom = signer.get("rect", rect)
+            box = pymupdf.Rect(left, top, right, bottom)
+            signer_image = signer.get("image_path")
+            if signer_image:
+                signer_image = Path(signer_image).resolve()
+                if not signer_image.is_file():
+                    raise ValueError(f"Signature image not found: {signer_image.name}")
+                page.insert_image(box, filename=str(signer_image))
+            signer_name = str(signer.get("name", ""))
+            signer_role = str(signer.get("role", ""))
+            if signer_name:
+                caption_y = bottom + 6
+                page.insert_text((left, caption_y), signer_name, fontsize=10, fontname="helv")
+                if signer_role:
+                    page.insert_text((left, caption_y + 13), signer_role, fontsize=8, fontname="helv")
         if progress:
             progress(90, "Signed page " + str(page_number))
         with atomic_output(output) as temporary:
